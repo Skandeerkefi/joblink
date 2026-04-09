@@ -33,6 +33,18 @@ const categoryColors: Record<string, string> = {
 
 const LIMIT = 10
 
+function getPaginationRange(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const range: (number | '...')[] = [1]
+  if (current > 3) range.push('...')
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+    range.push(p)
+  }
+  if (current < total - 2) range.push('...')
+  range.push(total)
+  return range
+}
+
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -210,7 +222,7 @@ export default function Jobs() {
 
           {/* Pagination */}
           {pages > 1 && (
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
@@ -218,19 +230,25 @@ export default function Jobs() {
               >
                 ← Prev
               </button>
-              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${
-                    p === page
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {getPaginationRange(page, pages).map((p, idx) =>
+                p === '...' ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-gray-400">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${
+                      p === page
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page === pages}

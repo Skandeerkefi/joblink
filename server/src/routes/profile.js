@@ -5,7 +5,9 @@ const CandidateProfile = require('../models/CandidateProfile');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
-// GET /api/profile/me — candidate or recruiter can see their own profile
+// GET /api/profile/me — returns the authenticated user's candidate profile.
+// Candidates get their full profile; recruiters receive an empty profile shell
+// (recruiter profile management is not yet supported).
 router.get('/me', protect, async (req, res, next) => {
   try {
     let profile = await CandidateProfile.findOne({ user: req.user.id }).lean();

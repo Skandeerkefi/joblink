@@ -25,8 +25,8 @@ export default function RecruiterJobs() {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await api.get('/jobs')
-        const allJobs: Job[] = res.data.jobs
+        const res = await api.get('/jobs', { params: { limit: 100 } })
+        const allJobs: Job[] = res.data.data
         setJobs(allJobs.filter((j) => j.recruiter?._id === user?.id))
       } catch {
         setError('Failed to load jobs')

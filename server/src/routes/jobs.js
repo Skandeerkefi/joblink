@@ -10,8 +10,19 @@ router.get('/', async (req, res, next) => {
   try {
     const filter = { isActive: true };
     if (req.query.category) filter.category = String(req.query.category);
-    const jobs = await Job.find(filter).populate('recruiter', 'name').sort({ createdAt: -1 });
-    res.json({ success: true, jobs });
+    if (req.query.q) {
+      const re = new RegExp(req.query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ title: re }, { description: re }];
+    }
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+    const [jobs, total] = await Promise.all([
+      Job.find(filter).populate('recruiter', 'name').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Job.countDocuments(filter),
+    ]);
+    const pages = Math.ceil(total / limit) || 1;
+    res.json({ success: true, data: jobs, page, limit, total, pages });
   } catch (err) {
     next(err);
   }

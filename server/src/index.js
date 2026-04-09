@@ -34,6 +34,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/resumes', require('./routes/resumes'));
 app.use('/api/applications', require('./routes/applications'));
+app.use('/api/profile', require('./routes/profile'));
 
 app.use(errorHandler);
 

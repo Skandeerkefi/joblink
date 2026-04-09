@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { CATEGORIES } from '../constants/categories'
@@ -31,27 +31,56 @@ const categoryColors: Record<string, string> = {
   OTHER: 'bg-gray-100 text-gray-800',
 }
 
+const LIMIT = 10
+
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(1)
 
-  useEffect(() => {
-    fetchJobs()
-  }, [selectedCategory])
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoading(true)
     try {
-      const params = selectedCategory ? { category: selectedCategory } : {}
+      const params: Record<string, string | number> = { page, limit: LIMIT }
+      if (selectedCategory) params.category = selectedCategory
+      if (searchQuery) params.q = searchQuery
       const res = await api.get('/jobs', { params })
-      setJobs(res.data.jobs)
+      setJobs(res.data.data)
+      setTotal(res.data.total)
+      setPages(res.data.pages)
     } catch {
       setError('Failed to load jobs')
     } finally {
       setLoading(false)
     }
+  }, [selectedCategory, searchQuery, page])
+
+  useEffect(() => {
+    fetchJobs()
+  }, [fetchJobs])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPage(1)
+    setSearchQuery(searchInput)
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value)
+    setPage(1)
+  }
+
+  const handleClearFilters = () => {
+    setSelectedCategory('')
+    setSearchInput('')
+    setSearchQuery('')
+    setPage(1)
   }
 
   const getCategoryLabel = (value: string) => {
@@ -69,28 +98,52 @@ export default function Jobs() {
         <p className="text-gray-500">Browse opportunities from top companies</p>
       </div>
 
-      <div className="mb-6 flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">Filter by Category:</label>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        >
-          <option value="">All Categories</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
-        {selectedCategory && (
+      {/* Search + filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-3">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search jobs by title or description..."
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
           <button
-            onClick={() => setSelectedCategory('')}
-            className="text-sm text-blue-600 hover:underline"
+            type="submit"
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap"
           >
-            Clear filter
+            Search
           </button>
-        )}
+        </form>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Category:</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="">All Categories</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+          {(selectedCategory || searchQuery) && (
+            <button
+              onClick={handleClearFilters}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Clear all filters
+            </button>
+          )}
+          {total > 0 && (
+            <span className="text-sm text-gray-400 ml-auto">
+              {total} job{total !== 1 ? 's' : ''} found
+            </span>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -105,49 +158,89 @@ export default function Jobs() {
         </div>
       ) : jobs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">No jobs found{selectedCategory ? ' for this category' : ''}.</p>
+          <p className="text-lg">No jobs found{selectedCategory || searchQuery ? ' matching your filters' : ''}.</p>
+          {(selectedCategory || searchQuery) && (
+            <button onClick={handleClearFilters} className="text-blue-600 hover:underline mt-2 block mx-auto">
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-4">
-          {jobs.map((job) => (
-            <Link
-              key={job._id}
-              to={`/jobs/${job._id}`}
-              className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow block"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-1">{job.title}</h2>
-                  <p className="text-gray-500 text-sm mb-3">
-                    {job.recruiter?.name} {job.location && `• ${job.location}`}
-                  </p>
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">{job.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors[job.category] || 'bg-gray-100 text-gray-800'}`}
-                    >
-                      {getCategoryLabel(job.category)}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {getJobTypeLabel(job.jobType)}
-                    </span>
-                    {job.skills.slice(0, 3).map((skill) => (
+        <>
+          <div className="grid gap-4 mb-6">
+            {jobs.map((job) => (
+              <Link
+                key={job._id}
+                to={`/jobs/${job._id}`}
+                className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow block"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-1">{job.title}</h2>
+                    <p className="text-gray-500 text-sm mb-3">
+                      {job.recruiter?.name} {job.location && `• ${job.location}`}
+                    </p>
+                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">{job.description}</p>
+                    <div className="flex flex-wrap gap-2">
                       <span
-                        key={skill}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors[job.category] || 'bg-gray-100 text-gray-800'}`}
                       >
-                        {skill}
+                        {getCategoryLabel(job.category)}
                       </span>
-                    ))}
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        {getJobTypeLabel(job.jobType)}
+                      </span>
+                      {job.skills.slice(0, 3).map((skill) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-400 ml-4 whitespace-nowrap shrink-0">
+                    {new Date(job.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="text-sm text-gray-400 ml-4 whitespace-nowrap">
-                  {new Date(job.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {pages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${
+                    p === page
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                disabled={page === pages}
+                className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

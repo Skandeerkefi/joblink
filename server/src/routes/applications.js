@@ -52,14 +52,20 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
 });
 
 // PATCH /api/applications/:id/status
+const VALID_STATUSES = ['APPLIED', 'VIEWED', 'INTERVIEW', 'REJECTED', 'HIRED'];
+
 router.patch('/:id/status', protect, authorize('recruiter'), async (req, res, next) => {
   try {
+    const { status } = req.body;
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: `Status must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
     const application = await Application.findById(req.params.id).populate('job');
     if (!application) return res.status(404).json({ success: false, message: 'Application not found' });
     if (application.job.recruiter.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    application.status = req.body.status;
+    application.status = status;
     await application.save();
     res.json({ success: true, application });
   } catch (err) {

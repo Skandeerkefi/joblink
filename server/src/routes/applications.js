@@ -8,7 +8,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.post('/', protect, authorize('candidate'), async (req, res, next) => {
   try {
     const { jobId, resumeId, coverLetter } = req.body;
-    const existing = await Application.findOne({ job: jobId, candidate: req.user.id });
+    const existing = await Application.findOne({ job: String(jobId), candidate: req.user.id });
     if (existing) return res.status(400).json({ success: false, message: 'Already applied to this job' });
     const application = await Application.create({
       job: jobId,

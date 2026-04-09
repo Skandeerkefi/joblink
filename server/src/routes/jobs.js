@@ -66,7 +66,11 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
     if (job.recruiter.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    const updated = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updated = await Job.findByIdAndUpdate(
+      req.params.id,
+      { $set: { title: req.body.title, description: req.body.description, location: req.body.location, jobType: req.body.jobType, category: req.body.category, skills: req.body.skills, isActive: req.body.isActive } },
+      { new: true, runValidators: true }
+    );
     res.json({ success: true, job: updated });
   } catch (err) {
     next(err);

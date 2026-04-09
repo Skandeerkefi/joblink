@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import api from '../../api/axios'
+import { API_BASE_URL } from '../../constants/config'
 
 interface Resume {
   _id: string
@@ -135,7 +136,7 @@ export default function MyResumes() {
                 <tr key={resume._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <a
-                      href={`http://localhost:5000${resume.fileUrl}`}
+                      href={`${API_BASE_URL}${resume.fileUrl}`}
                       target="_blank"
                       rel="noreferrer"
                       className="font-medium text-blue-600 hover:underline"

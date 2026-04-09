@@ -9,7 +9,7 @@ const validate = require('../middleware/validate');
 router.get('/', async (req, res, next) => {
   try {
     const filter = { isActive: true };
-    if (req.query.category) filter.category = req.query.category;
+    if (req.query.category) filter.category = String(req.query.category);
     const jobs = await Job.find(filter).populate('recruiter', 'name').sort({ createdAt: -1 });
     res.json({ success: true, jobs });
   } catch (err) {

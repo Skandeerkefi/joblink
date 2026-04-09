@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
 import { APPLICATION_STATUSES } from '../../constants/categories'
+import { API_BASE_URL } from '../../constants/config'
 
 interface Application {
   _id: string
@@ -111,7 +112,7 @@ export default function RecruiterApplications() {
                   <td className="px-6 py-4 text-sm">
                     {app.resume ? (
                       <a
-                        href={`http://localhost:5000${app.resume.fileUrl}`}
+                        href={`${API_BASE_URL}${app.resume.fileUrl}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-blue-600 hover:underline"

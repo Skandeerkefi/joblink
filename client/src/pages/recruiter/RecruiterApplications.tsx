@@ -111,6 +111,8 @@ function ApplicationCard({
   )
 }
 
+const COLUMN_MIN_WIDTH = 220
+
 function KanbanColumn({
   status,
   label,
@@ -122,7 +124,7 @@ function KanbanColumn({
 }) {
   const ids = apps.map((a) => a._id)
   return (
-    <div className={`flex flex-col min-h-[200px] rounded-xl border-2 ${columnColors[status]} overflow-hidden`} style={{ minWidth: 220, width: '100%' }}>
+    <div className={`flex flex-col min-h-[200px] rounded-xl border-2 ${columnColors[status]} overflow-hidden`} style={{ minWidth: COLUMN_MIN_WIDTH, width: '100%' }}>
       <div className={`px-3 py-2 font-semibold text-sm flex items-center justify-between ${columnHeaderColors[status]}`}>
         <span>{label}</span>
         <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${statusColors[status]}`}>
@@ -289,9 +291,9 @@ export default function RecruiterApplications() {
           onDragEnd={handleDragEnd}
         >
           <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4" style={{ minWidth: `${APPLICATION_STATUSES.length * 240}px` }}>
+            <div className="flex gap-4" style={{ minWidth: `${APPLICATION_STATUSES.length * (COLUMN_MIN_WIDTH + 16)}px` }}>
               {APPLICATION_STATUSES.map((s) => (
-                <div key={s.value} style={{ flex: '1 1 220px', minWidth: 220, maxWidth: 300 }}>
+                <div key={s.value} style={{ flex: `1 1 ${COLUMN_MIN_WIDTH}px`, minWidth: COLUMN_MIN_WIDTH, maxWidth: 300 }}>
                   <KanbanColumn
                     status={s.value}
                     label={s.label}

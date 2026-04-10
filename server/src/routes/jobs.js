@@ -27,11 +27,16 @@ router.get('/', async (req, res, next) => {
       filter.remote = req.query.remote === 'true';
     }
 
-    // Skills filter (comma-separated, match any)
+    // Skills filter (comma-separated, match any — case-insensitive)
     if (req.query.skills) {
       const skillList = String(req.query.skills).split(',').map((s) => s.trim()).filter(Boolean);
       if (skillList.length > 0) {
-        filter.skills = { $in: skillList.map((s) => new RegExp(`^${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')) };
+        filter.$or = filter.$or || [];
+        filter.skills = {
+          $elemMatch: {
+            $in: skillList.map((s) => new RegExp(`^${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),
+          },
+        };
       }
     }
 

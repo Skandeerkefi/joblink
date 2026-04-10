@@ -69,8 +69,17 @@ export default function SavedJobs() {
     setRemovingId(jobId)
     try {
       await api.delete(`/jobs/${jobId}/save`)
-      setSavedJobs((prev) => prev.filter((s) => s.job._id !== jobId))
-      setTotal((prev) => prev - 1)
+      const newTotal = total - 1
+      const newSaved = savedJobs.filter((s) => s.job._id !== jobId)
+      setSavedJobs(newSaved)
+      setTotal(newTotal)
+      // If this was the last item on a page > 1, go back a page
+      if (newSaved.length === 0 && page > 1) {
+        setPage((p) => p - 1)
+      } else {
+        const newPages = Math.ceil(newTotal / LIMIT) || 1
+        setPages(newPages)
+      }
     } catch {
       setError('Failed to remove saved job')
     } finally {

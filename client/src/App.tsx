@@ -9,6 +9,7 @@ import Jobs from './pages/Jobs'
 import JobDetail from './pages/JobDetail'
 import MyApplications from './pages/candidate/MyApplications'
 import MyResumes from './pages/candidate/MyResumes'
+import ManualResumeEditor from './pages/candidate/ManualResumeEditor'
 import CandidateDashboard from './pages/candidate/CandidateDashboard'
 import CandidateProfile from './pages/candidate/CandidateProfile'
 import RecruiterJobs from './pages/recruiter/RecruiterJobs'
@@ -59,6 +60,22 @@ function App() {
               element={
                 <ProtectedRoute role="candidate">
                   <MyResumes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidate/resumes/new"
+              element={
+                <ProtectedRoute role="candidate">
+                  <ManualResumeEditor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidate/resumes/:id/edit"
+              element={
+                <ProtectedRoute role="candidate">
+                  <ManualResumeEditor />
                 </ProtectedRoute>
               }
             />

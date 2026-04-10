@@ -18,12 +18,13 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST /api/resumes
+// POST /api/resumes  (file upload)
 router.post('/', protect, authorize('candidate'), upload.single('resume'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
     const resume = await Resume.create({
       candidate: req.user.id,
+      type: 'UPLOAD',
       filename: req.file.filename,
       originalName: req.file.originalname,
       fileUrl: `/uploads/${req.file.filename}`,
@@ -31,6 +32,43 @@ router.post('/', protect, authorize('candidate'), upload.single('resume'), async
       mimeType: req.file.mimetype,
     });
     res.status(201).json({ success: true, resume });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/resumes/manual  (create manual CV)
+router.post('/manual', protect, authorize('candidate'), async (req, res, next) => {
+  try {
+    const { title, manualData } = req.body;
+    const resume = await Resume.create({
+      candidate: req.user.id,
+      type: 'MANUAL',
+      title: title || 'My CV',
+      manualData: manualData || {},
+    });
+    res.status(201).json({ success: true, resume });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/resumes/:id/manual  (update manual CV)
+router.put('/:id/manual', protect, authorize('candidate'), async (req, res, next) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
+    if (resume.candidate.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (resume.type !== 'MANUAL') {
+      return res.status(400).json({ success: false, message: 'Not a manual resume' });
+    }
+    const { title, manualData } = req.body;
+    if (title !== undefined) resume.title = title;
+    if (manualData !== undefined) resume.manualData = manualData;
+    await resume.save();
+    res.json({ success: true, resume });
   } catch (err) {
     next(err);
   }
@@ -46,6 +84,20 @@ router.get('/mine', protect, authorize('candidate'), async (req, res, next) => {
   }
 });
 
+// GET /api/resumes/:id
+router.get('/:id', protect, authorize('candidate'), async (req, res, next) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
+    if (resume.candidate.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    res.json({ success: true, resume });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/resumes/:id
 router.delete('/:id', protect, authorize('candidate'), async (req, res, next) => {
   try {
@@ -54,8 +106,10 @@ router.delete('/:id', protect, authorize('candidate'), async (req, res, next) =>
     if (resume.candidate.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    const filePath = path.join(uploadsDir, resume.filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (resume.type === 'UPLOAD' && resume.filename) {
+      const filePath = path.join(uploadsDir, resume.filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
     await resume.deleteOne();
     res.json({ success: true, message: 'Resume deleted' });
   } catch (err) {

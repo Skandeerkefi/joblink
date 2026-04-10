@@ -125,6 +125,13 @@ interface Props {
 export default function ResumePdf({ data }: Props) {
   const { personalInfo, summary, skills, education, experience, projects } = data
 
+  // Build an array of contact items to render separators correctly
+  const contactItems: { text: string; href?: string }[] = []
+  if (personalInfo.email) contactItems.push({ text: personalInfo.email })
+  if (personalInfo.phone) contactItems.push({ text: personalInfo.phone })
+  if (personalInfo.location) contactItems.push({ text: personalInfo.location })
+  personalInfo.links?.filter(Boolean).forEach((link) => contactItems.push({ text: link, href: link }))
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -132,14 +139,17 @@ export default function ResumePdf({ data }: Props) {
         <View style={styles.header}>
           <Text style={styles.name}>{personalInfo.fullName || 'Your Name'}</Text>
           <View style={styles.contactRow}>
-            {personalInfo.email ? <Text style={styles.contactItem}>{personalInfo.email}</Text> : null}
-            {personalInfo.phone ? <Text style={styles.contactItem}>· {personalInfo.phone}</Text> : null}
-            {personalInfo.location ? <Text style={styles.contactItem}>· {personalInfo.location}</Text> : null}
-            {personalInfo.links?.filter(Boolean).map((link, i) => (
-              <Link key={i} src={link} style={{ ...styles.contactItem, color: BLUE }}>
-                · {link}
-              </Link>
-            ))}
+            {contactItems.map((item, i) =>
+              item.href ? (
+                <Link key={i} src={item.href} style={{ ...styles.contactItem, color: BLUE }}>
+                  {i > 0 ? '· ' : ''}{item.text}
+                </Link>
+              ) : (
+                <Text key={i} style={styles.contactItem}>
+                  {i > 0 ? '· ' : ''}{item.text}
+                </Text>
+              )
+            )}
           </View>
         </View>
 

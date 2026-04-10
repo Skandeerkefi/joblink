@@ -214,7 +214,7 @@ export default function ManualResumeEditor() {
     )
   }
 
-  const pdfFilename = `${data.personalInfo.fullName || 'resume'}-cv.pdf`
+  const pdfFilename = `${(data.personalInfo.fullName || 'resume').replace(/[^a-z0-9_\-]/gi, '_')}-cv.pdf`
 
   return (
     <div>

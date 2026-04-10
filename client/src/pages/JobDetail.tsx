@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { CATEGORIES, JOB_TYPES } from '../constants/categories'
@@ -10,6 +11,7 @@ interface Job {
   description: string
   location: string
   jobType: string
+  remote: boolean
   category: string
   skills: string[]
   recruiter: { _id: string; name: string; email: string }
@@ -50,11 +52,29 @@ export default function JobDetail() {
   const [applying, setApplying] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [isSaved, setIsSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([])
 
   useEffect(() => {
     fetchJob()
     if (user?.role === 'candidate') fetchResumes()
   }, [id, user])
+
+  useEffect(() => {
+    if (id) fetchSimilar()
+  }, [id])
+
+  // Check saved state for candidates
+  useEffect(() => {
+    if (!user || user.role !== 'candidate' || !id) return
+    api.get('/saved-jobs/mine', { params: { limit: 100 } })
+      .then((res) => {
+        const ids = new Set<string>(res.data.data.map((s: { job: { _id: string } }) => s.job._id))
+        setIsSaved(ids.has(id))
+      })
+      .catch(() => {})
+  }, [user, id])
 
   const fetchJob = async () => {
     try {
@@ -76,6 +96,15 @@ export default function JobDetail() {
     }
   }
 
+  const fetchSimilar = async () => {
+    try {
+      const res = await api.get(`/jobs/${id}/similar`)
+      setSimilarJobs(res.data.data)
+    } catch {
+      // ignore
+    }
+  }
+
   const handleApply = async () => {
     setError('')
     setSuccess('')
@@ -92,6 +121,24 @@ export default function JobDetail() {
       setError(e.response?.data?.message || 'Failed to apply')
     } finally {
       setApplying(false)
+    }
+  }
+
+  const handleSaveToggle = async () => {
+    if (!user) return
+    setSaving(true)
+    try {
+      if (isSaved) {
+        await api.delete(`/jobs/${id}/save`)
+        setIsSaved(false)
+      } else {
+        await api.post(`/jobs/${id}/save`)
+        setIsSaved(true)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -121,10 +168,29 @@ export default function JobDetail() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
-          <p className="text-gray-500 text-lg mb-4">
-            {job.recruiter?.name} {job.location && `• ${job.location}`}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
+              <p className="text-gray-500 text-lg mb-4">
+                {job.recruiter?.name}
+                {job.location && ` • ${job.location}`}
+                {job.remote && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-100 text-green-700">Remote</span>}
+              </p>
+            </div>
+            {user?.role === 'candidate' && (
+              <button
+                onClick={handleSaveToggle}
+                disabled={saving}
+                className={`shrink-0 px-4 py-2 rounded-lg font-medium text-sm border transition-colors ${
+                  isSaved
+                    ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                } disabled:opacity-50`}
+              >
+                {isSaved ? '★ Saved' : '☆ Save Job'}
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${categoryColors[job.category] || 'bg-gray-100 text-gray-800'}`}
@@ -232,6 +298,44 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Similar jobs */}
+      {similarJobs.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Similar Jobs</h2>
+          <div className="grid gap-3">
+            {similarJobs.map((sj) => (
+              <Link
+                key={sj._id}
+                to={`/jobs/${sj._id}`}
+                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow block"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">{sj.title}</h3>
+                    <p className="text-gray-500 text-sm">
+                      {sj.recruiter?.name}{sj.location && ` • ${sj.location}`}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryColors[sj.category] || 'bg-gray-100 text-gray-800'}`}>
+                        {CATEGORIES.find((c) => c.value === sj.category)?.label || sj.category}
+                      </span>
+                      {sj.skills.slice(0, 3).map((skill) => (
+                        <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400 ml-4 shrink-0">
+                    {new Date(sj.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

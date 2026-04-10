@@ -45,6 +45,18 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
       .populate('candidate', 'name email')
       .populate('resume', 'originalName fileUrl')
       .sort({ createdAt: -1 });
+
+    if (req.query.group === 'true') {
+      const grouped = {};
+      const STATUSES = ['APPLIED', 'VIEWED', 'INTERVIEW', 'REJECTED', 'HIRED'];
+      STATUSES.forEach((s) => { grouped[s] = []; });
+      applications.forEach((app) => {
+        if (grouped[app.status]) grouped[app.status].push(app);
+        else grouped['APPLIED'].push(app);
+      });
+      return res.json({ success: true, grouped });
+    }
+
     res.json({ success: true, applications });
   } catch (err) {
     next(err);

@@ -35,6 +35,7 @@ export default function Navbar() {
       <NavLink to="/candidate/dashboard">Dashboard</NavLink>
       <NavLink to="/jobs">Jobs</NavLink>
       <NavLink to="/candidate/applications">My Applications</NavLink>
+      <NavLink to="/candidate/saved-jobs">Saved Jobs</NavLink>
       <NavLink to="/candidate/resumes">My Resumes</NavLink>
       <NavLink to="/candidate/profile">Profile</NavLink>
     </>

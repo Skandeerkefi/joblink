@@ -34,7 +34,7 @@ const getClientUrl = (req) => {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return req.get('origin') || 'http://localhost:5173';
+  return 'http://localhost:5173';
 };
 
 // POST /api/auth/register

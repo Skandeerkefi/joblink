@@ -2,7 +2,7 @@ const TECHNOLOGY_NORMALIZATIONS = [
   [/node\.js/g, 'nodejs'],
   [/c\+\+/g, 'cpp'],
   [/c#/g, 'csharp'],
-  [/\.net/g, ' dotnet '],
+  [/\.net/g, 'dotnet'],
 ];
 
 const normalizeText = (text) => {
@@ -31,7 +31,7 @@ const KEYWORD_WEIGHT = 25;
 const DEFAULT_SKILL_SCORE = 35;
 const DEFAULT_KEYWORD_SCORE = 10;
 const CATEGORY_BONUS_POINTS = 5;
-const MIN_SKILL_TOKEN_MATCH_RATIO = 0.6;
+const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
 const SINGLE_TOKEN_MATCH_LIMIT = 2;
 
 const buildResumeText = (resume) => {
@@ -134,7 +134,7 @@ const calculateMatchScore = (resume, job) => {
     const threshold =
       skillTokens.length <= SINGLE_TOKEN_MATCH_LIMIT
         ? 1
-        : Math.ceil(skillTokens.length * MIN_SKILL_TOKEN_MATCH_RATIO);
+        : Math.ceil(skillTokens.length * SKILL_MATCH_THRESHOLD_RATIO);
     return matched + (overlap >= threshold ? 1 : 0);
   }, 0);
   const skillScore = jobSkills.length

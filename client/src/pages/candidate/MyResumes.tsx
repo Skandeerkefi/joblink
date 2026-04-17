@@ -12,7 +12,6 @@ export default function MyResumes() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [atsByResume, setAtsByResume] = useState<Record<string, number>>({})
   const [checkingAtsId, setCheckingAtsId] = useState<string | null>(null)
@@ -37,7 +36,6 @@ export default function MyResumes() {
     e.preventDefault()
     if (!file) return
     setError('')
-    setSuccess('')
     setUploading(true)
     try {
       const formData = new FormData()
@@ -54,7 +52,6 @@ export default function MyResumes() {
           prefillData: draft?.manualData,
         },
       })
-      setSuccess('CV imported. Review and save to confirm.')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setError(e.response?.data?.message || 'CV import failed')
@@ -110,12 +107,6 @@ export default function MyResumes() {
               {error}
             </div>
           )}
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {success}
-            </div>
-          )}
-
           <form onSubmit={handleUpload} className="flex flex-col gap-3">
             <input
               type="file"

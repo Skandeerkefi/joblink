@@ -25,7 +25,7 @@ const isText = (mimeType, ext) =>
 const parseResumeFile = async ({ filePath, mimeType, originalName }) => {
   const ext = getFileExtension(originalName || filePath);
   if (isPdf(mimeType, ext)) {
-    const buffer = fs.readFileSync(filePath);
+    const buffer = await fs.promises.readFile(filePath);
     const result = await pdfParse(buffer);
     return cleanText(result.text);
   }
@@ -34,7 +34,7 @@ const parseResumeFile = async ({ filePath, mimeType, originalName }) => {
     return cleanText(result.value);
   }
   if (isText(mimeType, ext)) {
-    return cleanText(fs.readFileSync(filePath, 'utf8'));
+    return cleanText(await fs.promises.readFile(filePath, 'utf8'));
   }
   return '';
 };
@@ -51,13 +51,6 @@ const ensureUploadedResumeParsed = async (resume, uploadsDir) => {
   }
 
   const filePath = path.join(uploadsDir, resume.filename);
-  if (!fs.existsSync(filePath)) {
-    resume.parseStatus = 'FAILED';
-    resume.parseError = 'Stored file not found';
-    resume.parsedAt = new Date();
-    await resume.save();
-    return resume;
-  }
 
   try {
     const parsedText = await parseResumeFile({
@@ -68,7 +61,7 @@ const ensureUploadedResumeParsed = async (resume, uploadsDir) => {
     if (parsedText) {
       resume.parsedText = parsedText;
       resume.parseStatus = 'PARSED';
-      resume.parseError = undefined;
+      resume.parseError = null;
     } else {
       resume.parseStatus = 'FAILED';
       resume.parseError = 'No readable text could be extracted from this file';
@@ -77,7 +70,10 @@ const ensureUploadedResumeParsed = async (resume, uploadsDir) => {
     await resume.save();
   } catch (error) {
     resume.parseStatus = 'FAILED';
-    resume.parseError = error.message || 'Resume parsing failed';
+    resume.parseError =
+      error && error.code === 'ENOENT'
+        ? 'Stored file not found'
+        : error.message || 'Resume parsing failed';
     resume.parsedAt = new Date();
     await resume.save();
   }

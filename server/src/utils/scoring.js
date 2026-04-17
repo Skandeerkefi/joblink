@@ -56,6 +56,14 @@ const ACTION_KEYWORDS = [
   'delivered',
   'launched',
 ];
+// Tuned for one-page to short two-page resumes, where ~450 useful tokens is usually ATS-friendly.
+const UPLOAD_TARGET_WORD_COUNT = 450;
+// Each 45-token distance from the target reduces the length sub-score by roughly 1 point.
+const UPLOAD_WORD_COUNT_STEP = 45;
+// Each strong action keyword contributes 2.5 points, capped separately in scoring.
+const UPLOAD_ACTION_KEYWORD_WEIGHT = 2.5;
+// Depth score reaches full points near the target word count (450 / 30 = 15).
+const UPLOAD_DEPTH_WORD_DIVISOR = 30;
 
 const buildResumeText = (resume) => {
   if (!resume) return '';
@@ -99,34 +107,47 @@ const calculateAtsScore = (resume) => {
   if (!resume) return { score: 0, breakdown: { message: 'No resume selected' } };
 
   if (resume.type !== 'MANUAL') {
-    const extractedText = String(resume.parsedText || '').trim();
-    if (!extractedText) {
+    const parsedText = String(resume.parsedText || '').trim();
+    if (!parsedText) {
+      const parseStatusMessage =
+        resume.parseStatus === 'FAILED'
+          ? `Text extraction failed: ${resume.parseError || 'unable to parse this file type'}`
+          : 'Text extraction is pending for this uploaded file';
       return {
         score: 45,
         breakdown: {
           format: 20,
           structure: 10,
           content: 15,
-          note: resume.parseError || 'Uploaded file detected. Text extraction was not available for this file yet.',
+          note: parseStatusMessage,
         },
       };
     }
 
-    const normalizedText = normalizeText(extractedText);
-    const tokens = unique(normalize(extractedText));
+    const tokens = unique(normalize(parsedText));
+    const tokenSet = new Set(tokens);
     const wordCount = tokens.length;
-    const hasEmail = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(extractedText);
-    const hasPhone = /(\+?\d[\d\s().-]{7,}\d)/.test(extractedText);
-    const hasLink = /(https?:\/\/|linkedin\.com|github\.com)/i.test(extractedText);
+    const hasEmail = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(parsedText);
+    const hasPhone = /(\+?\d[\d\s().-]{7,}\d)/.test(parsedText);
+    const hasLink = /(https?:\/\/|linkedin\.com|github\.com)/i.test(parsedText);
     const sectionHits = UPLOAD_SECTION_KEYWORDS.filter((section) =>
-      new RegExp(`\\b${section}\\b`, 'i').test(extractedText)
+      new RegExp(`\\b${section}\\b`, 'i').test(parsedText)
     ).length;
-    const actionHits = ACTION_KEYWORDS.filter((word) => normalizedText.includes(` ${word} `)).length;
+    const actionHits = ACTION_KEYWORDS.filter((word) => tokenSet.has(word)).length;
 
     const contactScore = (hasEmail ? 8 : 0) + (hasPhone ? 8 : 0) + (hasLink ? 4 : 0);
     const structureScore = Math.min(25, sectionHits * 4 + (sectionHits >= 4 ? 3 : 0));
-    const lengthScore = Math.max(0, Math.min(20, 20 - Math.abs(wordCount - 450) / 45));
-    const contentScore = Math.min(35, Math.min(20, actionHits * 2.5) + Math.min(15, wordCount / 45));
+    const lengthScore = Math.max(
+      0,
+      Math.min(20, 20 - Math.abs(wordCount - UPLOAD_TARGET_WORD_COUNT) / UPLOAD_WORD_COUNT_STEP)
+    );
+    // Content score = action language (max 20) + depth from word count (max 15), capped at 35.
+    const actionScore = Math.min(20, actionHits * UPLOAD_ACTION_KEYWORD_WEIGHT);
+    const depthScore = Math.min(15, wordCount / UPLOAD_DEPTH_WORD_DIVISOR);
+    const contentScore = Math.min(
+      35,
+      actionScore + depthScore
+    );
     const total = Math.round(Math.min(100, contactScore + structureScore + lengthScore + contentScore));
 
     return {

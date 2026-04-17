@@ -100,7 +100,7 @@ const calculateMatchScore = (resume, job) => {
   const resumeTokenSet = new Set(resumeTextTokens);
 
   const jobSkills = (job.skills || []).map((s) => String(s).toLowerCase().trim()).filter(Boolean);
-  const jobSkillMatches = jobSkills.filter((s) => resumeTokenSet.has(s.toLowerCase())).length;
+  const jobSkillMatches = jobSkills.filter((s) => resumeTokenSet.has(s)).length;
   const skillScore = jobSkills.length
     ? (jobSkillMatches / jobSkills.length) * 70
     : 35;

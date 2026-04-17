@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const Resume = require('../models/Resume');
@@ -10,6 +11,12 @@ const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
 router.post('/', protect, authorize('candidate'), async (req, res, next) => {
   try {
     const { jobId, resumeId, coverLetter } = req.body;
+    if (!jobId || !mongoose.Types.ObjectId.isValid(String(jobId))) {
+      return res.status(400).json({ success: false, message: 'Invalid jobId' });
+    }
+    if (resumeId && !mongoose.Types.ObjectId.isValid(String(resumeId))) {
+      return res.status(400).json({ success: false, message: 'Invalid resumeId' });
+    }
     const existing = await Application.findOne({ job: String(jobId), candidate: req.user.id });
     if (existing) return res.status(400).json({ success: false, message: 'Already applied to this job' });
 

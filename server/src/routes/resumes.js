@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -103,6 +104,9 @@ router.get('/:id', protect, authorize('candidate'), async (req, res, next) => {
 // GET /api/resumes/:id/analysis?jobId=...
 router.get('/:id/analysis', protect, authorize('candidate'), async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(String(req.params.id))) {
+      return res.status(400).json({ success: false, message: 'Invalid resume id' });
+    }
     const resume = await Resume.findById(req.params.id);
     if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
     if (resume.candidate.toString() !== req.user.id) {
@@ -112,6 +116,9 @@ router.get('/:id/analysis', protect, authorize('candidate'), async (req, res, ne
     const ats = calculateAtsScore(resume);
     let match = null;
     if (req.query.jobId) {
+      if (!mongoose.Types.ObjectId.isValid(String(req.query.jobId))) {
+        return res.status(400).json({ success: false, message: 'Invalid job id' });
+      }
       const job = await Job.findById(req.query.jobId);
       if (job) match = calculateMatchScore(resume, job);
     }

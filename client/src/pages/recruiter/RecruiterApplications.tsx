@@ -111,8 +111,8 @@ function ApplicationCard({
       </div>
       {(app.atsScore !== undefined || app.matchScore !== undefined) && (
         <div className="mt-2 text-[11px] text-gray-500">
-          ATS: <span className="font-semibold text-gray-300">{app.atsScore ?? '—'}</span> · Match:{' '}
-          <span className="font-semibold text-gray-300">{app.matchScore ?? '—'}</span>
+          ATS: <span className="font-semibold text-gray-700">{app.atsScore ?? '—'}</span> · Match:{' '}
+          <span className="font-semibold text-gray-700">{app.matchScore ?? '—'}</span>
         </div>
       )}
     </div>

@@ -15,6 +15,13 @@ const parseNumber = (value, fallback) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+const isNetworkUnreachableError = (error) => {
+  const code = String(error?.code || '').toUpperCase();
+  const errno = String(error?.errno || '').toUpperCase();
+  const message = String(error?.message || '').toUpperCase();
+  return code === 'ENETUNREACH' || errno === 'ENETUNREACH' || message.includes('ENETUNREACH');
+};
+
 const createTransporter = ({ host, tls } = {}) => {
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     return nodemailer.createTransport({
@@ -69,25 +76,40 @@ const sendVerificationEmail = async ({ email, name, verificationUrl }) => {
     const canRetryWithIpv4 =
       smtpHost &&
       !net.isIP(smtpHost) &&
-      String(error?.code || '').toUpperCase() === 'ESOCKET' &&
-      String(error?.message || '').includes('ENETUNREACH');
+      isNetworkUnreachableError(error);
 
     if (!canRetryWithIpv4) {
       throw error;
     }
 
-    try {
-      const ipv4Addresses = await dns.resolve4(smtpHost);
-      if (!ipv4Addresses.length) {
-        throw error;
-      }
+    const ipv4Addresses = await dns.resolve4(smtpHost).catch((retryResolveError) => {
+      console.warn(`SMTP IPv4 resolution failed for ${smtpHost}:`, retryResolveError.message || retryResolveError);
+      return null;
+    });
+    if (!Array.isArray(ipv4Addresses) || !ipv4Addresses.length) {
+      throw error;
+    }
 
-      const fallbackTransporter = createTransporter({
-        host: ipv4Addresses[0],
-        tls: { servername: smtpHost },
-      });
-      info = await fallbackTransporter.sendMail(mailOptions);
-    } catch {
+    let retryFailure;
+    for (const ipv4Address of ipv4Addresses) {
+      try {
+        const fallbackTransporter = createTransporter({
+          host: ipv4Address,
+          tls: { servername: smtpHost },
+        });
+        info = await fallbackTransporter.sendMail(mailOptions);
+        retryFailure = null;
+        break;
+      } catch (retryError) {
+        retryFailure = retryError;
+      }
+    }
+
+    if (retryFailure) {
+      console.warn(
+        `SMTP IPv4 retry failed for ${smtpHost} after ${ipv4Addresses.length} attempt(s):`,
+        retryFailure.message || retryFailure
+      );
       throw error;
     }
   }

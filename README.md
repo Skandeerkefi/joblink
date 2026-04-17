@@ -15,29 +15,21 @@ A full-stack job platform built with the MERN stack (MongoDB, Express, React, No
 cd server
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI, JWT secret and optional SMTP credentials for email verification
+# Edit .env with your MongoDB URI, JWT secret and optional Resend credentials for email verification
 npm run dev
 ```
 
 Server runs at http://localhost:5000
 
-### Email verification (optional SMTP config)
+### Email verification (optional Resend config)
 
 To send real verification emails, configure these server env vars:
 
-- `SMTP_HOST` (SMTP server host, e.g. `smtp.gmail.com`)
-- `SMTP_PORT` (usually `587` for STARTTLS or `465` for SSL/TLS)
-- `SMTP_SECURE` (`false` for `587`, `true` for `465`)
-- `SMTP_USER` (SMTP username/login)
-- `SMTP_PASS` (SMTP password/app-password)
-- `SMTP_FROM` (sender email shown to users)
-- `SMTP_CONNECTION_TIMEOUT_MS` (default `15000`)
-- `SMTP_GREETING_TIMEOUT_MS` (default `10000`)
-- `SMTP_SOCKET_TIMEOUT_MS` (default `20000`)
+- `RESEND_API_KEY` (Resend API key)
+- `RESEND_FROM` (verified sender address, e.g. `onboarding@resend.dev`)
 
-If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
-If SMTP resolves to IPv6 but the host network cannot route IPv6, the server automatically retries using an IPv4 SMTP address.
-When the SMTP provider is unreachable, auth endpoints now return `503 Service Unavailable` with a clear message instead of a generic `500` error.
+If Resend is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
+When the email provider is unreachable, auth endpoints return `503 Service Unavailable` with a clear message instead of a generic `500` error.
 
 ### Client
 
@@ -74,7 +66,7 @@ Set these environment variables in Vercel:
 - `MONGO_URI`
 - `JWT_SECRET`
 - `CLIENT_URL` (your deployed frontend URL; comma-separated list is supported)
-- Optional email vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- Optional email vars: `RESEND_API_KEY`, `RESEND_FROM`
 
 ## Tech Stack
 

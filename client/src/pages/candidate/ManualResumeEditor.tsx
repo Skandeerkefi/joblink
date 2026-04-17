@@ -88,9 +88,21 @@ export default function ManualResumeEditor() {
       api.get(`/resumes/${id}`)
         .then((res) => {
           const r = res.data.resume
+          const incoming = r.manualData || {}
+          const base = emptyManualData()
           setTitle(r.title || 'My CV')
           // Merge with defaults so newly added fields (e.g. certifications) exist on older resumes.
-          setData({ ...emptyManualData(), ...(r.manualData || {}) })
+          setData({
+            ...base,
+            ...incoming,
+            skills: Array.isArray(incoming.skills) ? incoming.skills : base.skills,
+            certifications: Array.isArray(incoming.certifications)
+              ? incoming.certifications
+              : base.certifications,
+            education: Array.isArray(incoming.education) ? incoming.education : base.education,
+            experience: Array.isArray(incoming.experience) ? incoming.experience : base.experience,
+            projects: Array.isArray(incoming.projects) ? incoming.projects : base.projects,
+          })
         })
         .catch(() => setError('Failed to load resume'))
         .finally(() => setLoading(false))

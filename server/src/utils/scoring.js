@@ -33,7 +33,9 @@ const DEFAULT_KEYWORD_SCORE = 10;
 const CATEGORY_BONUS_POINTS = 5;
 const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
 const SINGLE_TOKEN_MATCH_LIMIT = 2;
-const CONTACT_FIELD_WEIGHT = 20 / 3;
+const CONTACT_FIELD_MAX_SCORE = 20;
+const CONTACT_FIELDS_COUNT = 3; // fullName, email, phone
+const CONTACT_FIELD_WEIGHT = CONTACT_FIELD_MAX_SCORE / CONTACT_FIELDS_COUNT;
 
 const buildResumeText = (resume) => {
   if (!resume) return '';

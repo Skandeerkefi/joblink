@@ -8,7 +8,11 @@ const Resume = require('../models/Resume');
 const Job = require('../models/Job');
 const { protect, authorize } = require('../middleware/auth');
 const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
-const { ensureUploadedResumeParsed } = require('../utils/resumeParser');
+const {
+  ensureUploadedResumeParsed,
+  parseResumeFile,
+  extractManualDataFromText,
+} = require('../utils/resumeParser');
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -39,6 +43,37 @@ router.post('/', protect, authorize('candidate'), upload.single('resume'), async
     res.status(201).json({ success: true, resume });
   } catch (err) {
     next(err);
+  }
+});
+
+// POST /api/resumes/manual/prefill  (parse upload and prefill manual CV draft)
+router.post('/manual/prefill', protect, authorize('candidate'), upload.single('resume'), async (req, res, next) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+  try {
+    const parsedText = await parseResumeFile({
+      filePath: req.file.path,
+      mimeType: req.file.mimetype,
+      originalName: req.file.originalname,
+    });
+    const manualData = extractManualDataFromText(parsedText);
+    const basename = path.parse(req.file.originalname || 'CV').name || 'My CV';
+    const title = `${basename}`.trim() || 'My CV';
+
+    return res.status(200).json({
+      success: true,
+      draft: {
+        title,
+        manualData,
+      },
+      parsed: Boolean(parsedText && parsedText.trim()),
+    });
+  } catch (err) {
+    return next(err);
+  } finally {
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
   }
 });
 

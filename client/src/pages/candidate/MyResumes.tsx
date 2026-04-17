@@ -42,16 +42,22 @@ export default function MyResumes() {
     try {
       const formData = new FormData()
       formData.append('resume', file)
-      await api.post('/resumes', formData, {
+      const res = await api.post('/resumes/manual/prefill', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      setSuccess('Resume uploaded successfully!')
+      const draft = res.data?.draft
       setFile(null)
       ;(e.target as HTMLFormElement).reset()
-      fetchResumes()
+      navigate('/candidate/resumes/new', {
+        state: {
+          prefillTitle: draft?.title,
+          prefillData: draft?.manualData,
+        },
+      })
+      setSuccess('CV imported. Review and save to confirm.')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      setError(e.response?.data?.message || 'Upload failed')
+      setError(e.response?.data?.message || 'CV import failed')
     } finally {
       setUploading(false)
     }
@@ -92,10 +98,12 @@ export default function MyResumes() {
 
       {/* Action choice */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {/* Upload CV card */}
+        {/* Import CV to manual editor card */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Upload CV</h2>
-          <p className="text-sm text-gray-500 mb-4">Upload an existing PDF, Word or other CV file.</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Import CV to Manual Editor</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Upload a CV file, auto-fill the manual form, then review and save to confirm.
+          </p>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -121,10 +129,10 @@ export default function MyResumes() {
               disabled={uploading || !file}
               className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              {uploading ? 'Uploading...' : 'Upload'}
-            </button>
-          </form>
-        </div>
+                {uploading ? 'Importing...' : 'Import & Edit'}
+              </button>
+            </form>
+          </div>
 
         {/* Create Manual CV card */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
@@ -148,7 +156,7 @@ export default function MyResumes() {
         </div>
       ) : resumes.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-500">No resumes yet. Upload a file or create one manually.</p>
+          <p className="text-gray-500">No resumes yet. Import a CV into the editor or create one manually.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

@@ -73,7 +73,10 @@ router.post(
       } catch (emailError) {
         console.error('Verification email send failed during registration:', safeErrorMetadata(emailError));
         await User.deleteOne({ _id: user._id }).catch((cleanupError) => {
-          console.error('Failed to roll back user after email failure:', safeErrorMetadata(cleanupError));
+          console.error(
+            'CRITICAL: Failed to roll back newly created account after registration email failure. Manual cleanup may be required.',
+            safeErrorMetadata(cleanupError)
+          );
         });
         return res.status(503).json({
           success: false,

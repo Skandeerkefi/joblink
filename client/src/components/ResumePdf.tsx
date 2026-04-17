@@ -123,7 +123,7 @@ interface Props {
 }
 
 export default function ResumePdf({ data }: Props) {
-  const { personalInfo, summary, skills, education, experience, projects } = data
+  const { personalInfo, summary, skills, certifications, education, experience, projects } = data
 
   // Build an array of contact items to render separators correctly
   const contactItems: { text: string; href?: string }[] = []
@@ -192,6 +192,27 @@ export default function ResumePdf({ data }: Props) {
                     <Text style={styles.bulletText}>{b}</Text>
                   </View>
                 ))}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {/* Certifications */}
+        {certifications && certifications.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Certifications</Text>
+            {certifications.map((cert, i) => (
+              <View key={i} style={styles.entryBlock}>
+                <View style={styles.entryRow}>
+                  <Text style={styles.entryTitle}>{cert.name}</Text>
+                  {cert.issueDate ? <Text style={styles.entryDate}>{cert.issueDate}</Text> : null}
+                </View>
+                <Text style={styles.entrySubtitle}>
+                  {[cert.issuer, cert.credentialId ? `ID: ${cert.credentialId}` : ''].filter(Boolean).join(' · ')}
+                </Text>
+                {cert.link ? (
+                  <Link src={cert.link} style={{ ...styles.entryDate, color: BLUE }}>{cert.link}</Link>
+                ) : null}
               </View>
             ))}
           </View>

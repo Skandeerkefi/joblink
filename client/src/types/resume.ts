@@ -32,10 +32,19 @@ export interface Project {
   bullets: string[]
 }
 
+export interface Certification {
+  name: string
+  issuer: string
+  issueDate: string
+  credentialId: string
+  link: string
+}
+
 export interface ManualData {
   personalInfo: PersonalInfo
   summary: string
   skills: string[]
+  certifications: Certification[]
   education: Education[]
   experience: Experience[]
   projects: Project[]
@@ -58,6 +67,7 @@ export const emptyManualData = (): ManualData => ({
   personalInfo: { fullName: '', email: '', phone: '', location: '', links: [] },
   summary: '',
   skills: [],
+  certifications: [],
   education: [],
   experience: [],
   projects: [],

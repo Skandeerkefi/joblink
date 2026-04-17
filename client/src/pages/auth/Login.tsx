@@ -24,7 +24,9 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password })
       const { token, user } = res.data
       login(token, user)
-      if (user.role === 'recruiter') {
+      if (user.role === 'admin') {
+        navigate('/admin/users')
+      } else if (user.role === 'recruiter') {
         navigate('/recruiter/jobs')
       } else {
         navigate('/jobs')
@@ -54,10 +56,10 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center -mt-8 px-4 bg-black">
-      <div className="max-w-md w-full bg-gray-950 border border-gray-800 rounded-2xl shadow-2xl p-8">
-        <h2 className="text-3xl font-bold text-white mb-2 text-center">Welcome back</h2>
-        <p className="text-gray-400 text-center mb-8">Sign in to your JobLink account</p>
+    <div className="min-h-screen flex items-center justify-center -mt-8 px-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl p-8">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">Welcome back</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-center mb-8">Sign in to your JobLink account</p>
 
         {error && (
           <div className="bg-red-900/30 border border-red-800 text-red-300 px-4 py-3 rounded-lg mb-6">
@@ -80,24 +82,24 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
           </div>
@@ -112,14 +114,14 @@ export default function Login() {
             <button
               type="button"
               onClick={handleResendVerification}
-              className="w-full bg-gray-800 text-gray-100 py-2 px-4 rounded-lg hover:bg-gray-700 font-medium"
+              className="w-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 font-medium"
             >
               Resend verification email
             </button>
           )}
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
           Don't have an account?{' '}
           <Link to="/register" className="text-blue-400 hover:underline font-medium">
             Register here

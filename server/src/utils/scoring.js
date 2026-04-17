@@ -49,6 +49,9 @@ const buildResumeText = (resume) => {
     const projects = (m.projects || [])
       .map((p) => [p.name, p.description, ...(p.bullets || [])].filter(Boolean).join(' '))
       .join(' ');
+    const certifications = (m.certifications || [])
+      .map((c) => [c.name, c.issuer, c.issueDate, c.credentialId, c.link].filter(Boolean).join(' '))
+      .join(' ');
 
     return [
       resume.title,
@@ -57,6 +60,7 @@ const buildResumeText = (resume) => {
       personal.location,
       m.summary,
       ...(m.skills || []),
+      certifications,
       education,
       experience,
       projects,
@@ -89,6 +93,7 @@ const calculateAtsScore = (resume) => {
   const experience = m.experience || [];
   const education = m.education || [];
   const projects = m.projects || [];
+  const certifications = m.certifications || [];
   const totalBulletsCount =
     experience.reduce((sum, e) => sum + (e.bullets || []).length, 0) +
     projects.reduce((sum, p) => sum + (p.bullets || []).length, 0);
@@ -99,11 +104,18 @@ const calculateAtsScore = (resume) => {
   const experienceScore = Math.min(20, experience.length * 6 + Math.min(5, totalBulletsCount * 0.5));
   const educationScore = Math.min(10, education.length * 5);
   const projectsScore = Math.min(10, projects.length * 3.5 + Math.min(3, totalBulletsCount * 0.3));
+  const certificationsScore = Math.min(10, certifications.length * 4);
 
   const total = Math.round(
     Math.min(
       100,
-      contactScore + summaryScore + skillsScore + experienceScore + educationScore + projectsScore
+      contactScore +
+        summaryScore +
+        skillsScore +
+        experienceScore +
+        educationScore +
+        projectsScore +
+        certificationsScore
     )
   );
 
@@ -116,6 +128,7 @@ const calculateAtsScore = (resume) => {
       experience: Math.round(experienceScore),
       education: Math.round(educationScore),
       projects: Math.round(projectsScore),
+      certifications: Math.round(certificationsScore),
     },
   };
 };

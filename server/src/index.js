@@ -36,6 +36,7 @@ app.use('/api/resumes', require('./routes/resumes'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/saved-jobs', require('./routes/savedJobs'));
+app.use('/api/admin', require('./routes/admin'));
 
 app.use(errorHandler);
 

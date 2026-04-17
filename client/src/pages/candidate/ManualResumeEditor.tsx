@@ -3,15 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import api from '../../api/axios'
 import ResumePdf from '../../components/ResumePdf'
-import type { ManualData, Education, Experience, Project } from '../../types/resume'
+import type { ManualData, Education, Experience, Project, Certification } from '../../types/resume'
 import { emptyManualData } from '../../types/resume'
 
-type Section = 'personal' | 'summary' | 'skills' | 'education' | 'experience' | 'projects'
+type Section = 'personal' | 'summary' | 'skills' | 'certifications' | 'education' | 'experience' | 'projects'
 
 const SECTIONS: { key: Section; label: string }[] = [
   { key: 'personal', label: 'Personal Info' },
   { key: 'summary', label: 'Summary' },
   { key: 'skills', label: 'Skills' },
+  { key: 'certifications', label: 'Certifications' },
   { key: 'education', label: 'Education' },
   { key: 'experience', label: 'Experience' },
   { key: 'projects', label: 'Projects' },
@@ -88,7 +89,7 @@ export default function ManualResumeEditor() {
         .then((res) => {
           const r = res.data.resume
           setTitle(r.title || 'My CV')
-          setData(r.manualData || emptyManualData())
+          setData({ ...emptyManualData(), ...(r.manualData || {}) })
         })
         .catch(() => setError('Failed to load resume'))
         .finally(() => setLoading(false))
@@ -118,6 +119,23 @@ export default function ManualResumeEditor() {
   }
   const removeSkill = (i: number) =>
     setData((d) => ({ ...d, skills: d.skills.filter((_, idx) => idx !== i) }))
+
+  // Certifications
+  const addCertification = () =>
+    setData((d) => ({
+      ...d,
+      certifications: [
+        ...(d.certifications || []),
+        { name: '', issuer: '', issueDate: '', credentialId: '', link: '' },
+      ],
+    }))
+  const updateCertification = (i: number, key: keyof Certification, val: string) => {
+    const arr = [...(data.certifications || [])]
+    arr[i] = { ...arr[i], [key]: val }
+    setData((d) => ({ ...d, certifications: arr }))
+  }
+  const removeCertification = (i: number) =>
+    setData((d) => ({ ...d, certifications: (d.certifications || []).filter((_, idx) => idx !== i) }))
 
   // Education helpers
   const addEducation = () =>
@@ -337,6 +355,30 @@ export default function ManualResumeEditor() {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeSection === 'certifications' && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Certifications</h2>
+              {(data.certifications || []).map((cert, i) => (
+                <div key={i} className="border border-gray-200 rounded-lg p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-medium text-gray-700 text-sm">Certification #{i + 1}</span>
+                    <button onClick={() => removeCertification(i)} className="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InputField label="Certificate Name" value={cert.name} onChange={(v) => updateCertification(i, 'name', v)} placeholder="AWS Certified Developer" />
+                    <InputField label="Issuer" value={cert.issuer} onChange={(v) => updateCertification(i, 'issuer', v)} placeholder="Amazon Web Services" />
+                    <InputField label="Issue Date" value={cert.issueDate} onChange={(v) => updateCertification(i, 'issueDate', v)} placeholder="2025-02" />
+                    <InputField label="Credential ID" value={cert.credentialId} onChange={(v) => updateCertification(i, 'credentialId', v)} placeholder="ABC-12345" />
+                    <div className="sm:col-span-2">
+                      <InputField label="Credential Link (optional)" value={cert.link} onChange={(v) => updateCertification(i, 'link', v)} placeholder="https://..." type="url" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={addCertification} className="text-sm text-blue-600 hover:underline">+ Add certification</button>
             </div>
           )}
 

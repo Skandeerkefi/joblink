@@ -1,20 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import { APPLICATION_STATUSES } from '../../constants/categories'
 import { API_BASE_URL } from '../../constants/config'
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 interface Application {
   _id: string
@@ -39,137 +26,21 @@ interface Application {
   createdAt: string
 }
 
-type Grouped = Record<string, Application[]>
-
-const statusColors: Record<string, string> = {
-  APPLIED: 'bg-gray-100 text-gray-700',
-  VIEWED: 'bg-blue-100 text-blue-700',
-  INTERVIEW: 'bg-yellow-100 text-yellow-700',
-  REJECTED: 'bg-red-100 text-red-700',
-  HIRED: 'bg-green-100 text-green-700',
-}
-
-const columnColors: Record<string, string> = {
-  APPLIED: 'border-gray-300',
-  VIEWED: 'border-blue-300',
-  INTERVIEW: 'border-yellow-300',
-  REJECTED: 'border-red-300',
-  HIRED: 'border-green-300',
-}
-
-const columnHeaderColors: Record<string, string> = {
-  APPLIED: 'bg-gray-50 text-gray-700',
-  VIEWED: 'bg-blue-50 text-blue-700',
-  INTERVIEW: 'bg-yellow-50 text-yellow-700',
-  REJECTED: 'bg-red-50 text-red-700',
-  HIRED: 'bg-green-50 text-green-700',
-}
-
-function ApplicationCard({
-  app,
-  isOverlayDragging = false,
-}: {
-  app: Application
-  isOverlayDragging?: boolean
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging: isSortableDragging } =
-    useSortable({ id: app._id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isSortableDragging ? 0.4 : 1,
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`bg-white rounded-lg border border-gray-200 p-3 cursor-grab active:cursor-grabbing shadow-sm ${isOverlayDragging ? 'shadow-lg rotate-1' : 'hover:shadow-md'} transition-shadow`}
-    >
-      <div className="font-medium text-gray-900 text-sm truncate">{app.candidate?.name}</div>
-      <div className="text-xs text-gray-500 truncate mb-1">{app.candidate?.email}</div>
-      <div className="text-xs font-medium text-gray-700 truncate">{app.job?.title}</div>
-      {app.job?.location && (
-        <div className="text-xs text-gray-400 truncate">{app.job.location}</div>
-      )}
-      {app.resume && (
-        <a
-          href={`${API_BASE_URL}${app.resume.fileUrl}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs text-blue-600 hover:underline mt-1 block truncate"
-          onClick={(e) => e.stopPropagation()}
-        >
-          📎 {app.resume.originalName}
-        </a>
-      )}
-      <div className="text-xs text-gray-400 mt-1">
-        {new Date(app.createdAt).toLocaleDateString()}
-      </div>
-      {(app.atsScore !== undefined || app.matchScore !== undefined) && (
-        <div className="mt-2 text-[11px] text-gray-500">
-          ATS: <span className="font-semibold text-gray-700">{app.atsScore ?? '—'}</span> · Match:{' '}
-          <span className="font-semibold text-gray-700">{app.matchScore ?? '—'}</span>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const COLUMN_MIN_WIDTH = 220
-
-function KanbanColumn({
-  status,
-  label,
-  apps,
-}: {
-  status: string
-  label: string
-  apps: Application[]
-}) {
-  const ids = apps.map((a) => a._id)
-  return (
-    <div className={`flex flex-col min-h-[200px] rounded-xl border-2 ${columnColors[status]} overflow-hidden`} style={{ minWidth: COLUMN_MIN_WIDTH, width: '100%' }}>
-      <div className={`px-3 py-2 font-semibold text-sm flex items-center justify-between ${columnHeaderColors[status]}`}>
-        <span>{label}</span>
-        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${statusColors[status]}`}>
-          {apps.length}
-        </span>
-      </div>
-      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2 p-2 flex-1 min-h-[80px]">
-          {apps.map((app) => (
-            <ApplicationCard key={app._id} app={app} />
-          ))}
-          {apps.length === 0 && (
-            <div className="flex-1 flex items-center justify-center text-xs text-gray-400 py-4">
-              Drop here
-            </div>
-          )}
-        </div>
-      </SortableContext>
-    </div>
-  )
-}
-
 export default function RecruiterApplications() {
-  const [grouped, setGrouped] = useState<Grouped>({})
+  const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeApp, setActiveApp] = useState<Application | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  )
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [minAts, setMinAts] = useState('')
+  const [minMatch, setMinMatch] = useState('')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await api.get('/applications/for-my-jobs', { params: { group: 'true' } })
-        setGrouped(res.data.grouped)
+        const res = await api.get('/applications/for-my-jobs')
+        setApplications(res.data.applications || [])
       } catch {
         setError('Failed to load applications')
       } finally {
@@ -179,85 +50,32 @@ export default function RecruiterApplications() {
     fetchApplications()
   }, [])
 
-  const findAppById = (id: string): Application | null => {
-    for (const apps of Object.values(grouped)) {
-      const found = apps.find((a) => a._id === id)
-      if (found) return found
-    }
-    return null
-  }
+  const filtered = useMemo(() => {
+    const atsThreshold = minAts === '' ? null : Number(minAts)
+    const matchThreshold = minMatch === '' ? null : Number(minMatch)
 
-  const findColumnOfApp = (id: string): string | null => {
-    for (const [col, apps] of Object.entries(grouped)) {
-      if (apps.find((a) => a._id === id)) return col
-    }
-    return null
-  }
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const app = findAppById(String(event.active.id))
-    setActiveApp(app)
-  }
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event
-    if (!over) return
-
-    const activeId = String(active.id)
-    const overId = String(over.id)
-
-    const activeCol = findColumnOfApp(activeId)
-    // Determine target column: over could be a column id or an app id
-    const overCol = grouped[overId] ? overId : findColumnOfApp(overId)
-
-    if (!activeCol || !overCol || activeCol === overCol) return
-
-    setGrouped((prev) => {
-      const sourceApps = [...(prev[activeCol] || [])]
-      const targetApps = [...(prev[overCol] || [])]
-      const appIndex = sourceApps.findIndex((a) => a._id === activeId)
-      if (appIndex === -1) return prev
-      const [movedApp] = sourceApps.splice(appIndex, 1)
-      targetApps.push(movedApp)
-      return { ...prev, [activeCol]: sourceApps, [overCol]: targetApps }
-    })
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveApp(null)
-    if (!over) return
-
-    const activeId = String(active.id)
-    const overId = String(over.id)
-
-    // Determine target column
-    const targetCol = grouped[overId] ? overId : findColumnOfApp(overId)
-    if (!targetCol) return
-
-    const app = findAppById(activeId)
-    if (!app || app.status === targetCol) return
-
-    try {
-      await api.patch(`/applications/${activeId}/status`, { status: targetCol })
-      setGrouped((prev) => {
-        const updated = { ...prev }
-        for (const col of Object.keys(updated)) {
-          updated[col] = updated[col].map((a) =>
-            a._id === activeId ? { ...a, status: targetCol } : a
-          )
-        }
-        return updated
+    return [...applications]
+      .filter((a) => (statusFilter === 'ALL' ? true : a.status === statusFilter))
+      .filter((a) => (atsThreshold === null ? true : (a.atsScore ?? -1) >= atsThreshold))
+      .filter((a) => (matchThreshold === null ? true : (a.matchScore ?? -1) >= matchThreshold))
+      .sort((a, b) => {
+        const matchA = a.matchScore ?? -1
+        const matchB = b.matchScore ?? -1
+        if (matchB !== matchA) return matchB - matchA
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       })
+  }, [applications, minAts, minMatch, statusFilter])
+
+  const changeStatus = async (id: string, status: string) => {
+    setUpdatingId(id)
+    setError('')
+    try {
+      await api.patch(`/applications/${id}/status`, { status })
+      setApplications((prev) => prev.map((a) => (a._id === id ? { ...a, status } : a)))
     } catch {
       setError('Failed to update status')
-      // Revert: refetch
-      try {
-        const res = await api.get('/applications/for-my-jobs', { params: { group: 'true' } })
-        setGrouped(res.data.grouped)
-      } catch {
-        // ignore
-      }
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -269,14 +87,12 @@ export default function RecruiterApplications() {
     )
   }
 
-  const totalApps = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0)
-
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Applications Pipeline</h1>
-        <p className="text-gray-500 text-sm">
-          {totalApps} application{totalApps !== 1 ? 's' : ''} — drag cards to change status
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">Applications</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          Sorted by <span className="font-semibold">match score</span> by default.
         </p>
       </div>
 
@@ -286,38 +102,168 @@ export default function RecruiterApplications() {
         </div>
       )}
 
-      {totalApps === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-500 text-lg">No applications received yet.</p>
+      <div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="ALL">All statuses</option>
+              {APPLICATION_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Min ATS Score</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={minAts}
+              onChange={(e) => setMinAts(e.target.value)}
+              placeholder="e.g. 60"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Min Match Score</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={minMatch}
+              onChange={(e) => setMinMatch(e.target.value)}
+              placeholder="e.g. 70"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setStatusFilter('ALL')
+                setMinAts('')
+                setMinMatch('')
+              }}
+              className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No applications match the selected filters.</p>
         </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4" style={{ minWidth: `${APPLICATION_STATUSES.length * (COLUMN_MIN_WIDTH + 16)}px` }}>
-              {APPLICATION_STATUSES.map((s) => (
-                <div key={s.value} style={{ flex: `1 1 ${COLUMN_MIN_WIDTH}px`, minWidth: COLUMN_MIN_WIDTH, maxWidth: 300 }}>
-                  <KanbanColumn
-                    status={s.value}
-                    label={s.label}
-                    apps={grouped[s.value] || []}
-                  />
-                </div>
-              ))}
-            </div>
+        <>
+          <div className="hidden md:block bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
+            <table className="w-full min-w-[980px]">
+              <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Candidate</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Job</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">ATS</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Match</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Status</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Resume</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Applied</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {filtered.map((app) => (
+                  <tr key={app._id}>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{app.candidate?.name}</div>
+                      <div className="text-xs text-gray-500">{app.candidate?.email}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{app.job?.title}</div>
+                      <div className="text-xs text-gray-500">{app.job?.location || '—'}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-blue-600">{app.atsScore ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-indigo-600">{app.matchScore ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={app.status}
+                        disabled={updatingId === app._id}
+                        onChange={(e) => changeStatus(app._id, e.target.value)}
+                        className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                      >
+                        {APPLICATION_STATUSES.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      {app.resume ? (
+                        <a
+                          href={`${API_BASE_URL}${app.resume.fileUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          {app.resume.originalName}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-500">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{new Date(app.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <DragOverlay>
-            {activeApp ? (
-              <ApplicationCard app={activeApp} isOverlayDragging />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+          <div className="md:hidden space-y-3">
+            {filtered.map((app) => (
+              <div key={app._id} className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">{app.candidate?.name}</div>
+                <div className="text-xs text-gray-500 mb-2">{app.candidate?.email}</div>
+                <div className="text-sm font-medium">{app.job?.title}</div>
+                <div className="text-xs text-gray-500 mb-3">{app.job?.location || '—'}</div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>ATS: <span className="font-semibold text-blue-600">{app.atsScore ?? '—'}</span></div>
+                  <div>Match: <span className="font-semibold text-indigo-600">{app.matchScore ?? '—'}</span></div>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <select
+                    value={app.status}
+                    disabled={updatingId === app._id}
+                    onChange={(e) => changeStatus(app._id, e.target.value)}
+                    className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                  >
+                    {APPLICATION_STATUSES.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  {app.resume && (
+                    <a
+                      href={`${API_BASE_URL}${app.resume.fileUrl}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Resume
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

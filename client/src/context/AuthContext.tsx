@@ -4,7 +4,7 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'candidate' | 'recruiter'
+  role: 'candidate' | 'recruiter' | 'admin'
   emailVerified?: boolean
 }
 

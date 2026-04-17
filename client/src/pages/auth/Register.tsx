@@ -36,10 +36,10 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center -mt-8 px-4 bg-black">
-      <div className="max-w-md w-full bg-gray-950 border border-gray-800 rounded-2xl shadow-2xl p-8">
-        <h2 className="text-3xl font-bold text-white mb-2 text-center">Create account</h2>
-        <p className="text-gray-400 text-center mb-8">Join JobLink today</p>
+    <div className="min-h-screen flex items-center justify-center -mt-8 px-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl p-8">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">Create account</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-center mb-8">Join JobLink today</p>
 
         {error && (
           <div className="bg-red-900/30 border border-red-800 text-red-300 px-4 py-3 rounded-lg mb-6">
@@ -62,31 +62,31 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
             <input
               type="text"
               name="name"
               value={form.name}
               onChange={handleChange}
               required
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="John Doe"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               required
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
             <input
               type="password"
               name="password"
@@ -94,17 +94,17 @@ export default function Register() {
               onChange={handleChange}
               required
               minLength={6}
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">I am a...</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">I am a...</label>
             <select
               name="role"
               value={form.role}
               onChange={handleChange}
-              className="w-full bg-black border border-gray-700 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="candidate">Job Seeker (Candidate)</option>
               <option value="recruiter">Recruiter / Employer</option>
@@ -119,7 +119,7 @@ export default function Register() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-blue-400 hover:underline font-medium">
             Sign in

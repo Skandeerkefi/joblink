@@ -19,6 +19,7 @@ const seedDB = async () => {
       email: 'test@candidate.com',
       password: 'password123',
       role: 'candidate',
+      emailVerified: true,
     });
 
     const recruiter = await User.create({
@@ -26,9 +27,18 @@ const seedDB = async () => {
       email: 'test@recruiter.com',
       password: 'password123',
       role: 'recruiter',
+      emailVerified: true,
     });
 
-    console.log(`Created users: ${candidate.email}, ${recruiter.email}`);
+    const admin = await User.create({
+      name: 'Test Admin',
+      email: 'test@admin.com',
+      password: 'password123',
+      role: 'admin',
+      emailVerified: true,
+    });
+
+    console.log(`Created users: ${candidate.email}, ${recruiter.email}, ${admin.email}`);
 
     const jobs = await Job.insertMany([
       {
@@ -83,6 +93,7 @@ const seedDB = async () => {
     console.log('\nTest accounts:');
     console.log('  Candidate: test@candidate.com / password123');
     console.log('  Recruiter: test@recruiter.com / password123');
+    console.log('  Admin: test@admin.com / password123');
   } catch (err) {
     console.error('Seeding error:', err);
   } finally {

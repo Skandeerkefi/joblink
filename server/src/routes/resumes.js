@@ -8,6 +8,7 @@ const Resume = require('../models/Resume');
 const Job = require('../models/Job');
 const { protect, authorize } = require('../middleware/auth');
 const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
+const { ensureUploadedResumeParsed } = require('../utils/resumeParser');
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -34,6 +35,7 @@ router.post('/', protect, authorize('candidate'), upload.single('resume'), async
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
     });
+    await ensureUploadedResumeParsed(resume, uploadsDir);
     res.status(201).json({ success: true, resume });
   } catch (err) {
     next(err);
@@ -113,6 +115,7 @@ router.get('/:id/analysis', protect, authorize('candidate'), async (req, res, ne
     if (resume.candidate.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
+    await ensureUploadedResumeParsed(resume, uploadsDir);
 
     const ats = calculateAtsScore(resume);
     let match = null;

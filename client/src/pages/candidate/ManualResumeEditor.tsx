@@ -89,6 +89,7 @@ export default function ManualResumeEditor() {
         .then((res) => {
           const r = res.data.resume
           setTitle(r.title || 'My CV')
+          // Merge with defaults so newly added fields (e.g. certifications) exist on older resumes.
           setData({ ...emptyManualData(), ...(r.manualData || {}) })
         })
         .catch(() => setError('Failed to load resume'))

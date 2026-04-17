@@ -33,6 +33,7 @@ const DEFAULT_KEYWORD_SCORE = 10;
 const CATEGORY_BONUS_POINTS = 5;
 const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
 const SINGLE_TOKEN_MATCH_LIMIT = 2;
+const CONTACT_FIELD_WEIGHT = 20 / 3;
 
 const buildResumeText = (resume) => {
   if (!resume) return '';
@@ -98,7 +99,7 @@ const calculateAtsScore = (resume) => {
     experience.reduce((sum, e) => sum + (e.bullets || []).length, 0) +
     projects.reduce((sum, p) => sum + (p.bullets || []).length, 0);
 
-  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * 6.67;
+  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * CONTACT_FIELD_WEIGHT;
   const summaryScore = Math.min(15, Math.max(0, String(m.summary || '').trim().length / 12));
   const skillsScore = Math.min(20, skills.length * 2.5);
   const experienceScore = Math.min(20, experience.length * 6 + Math.min(5, totalBulletsCount * 0.5));

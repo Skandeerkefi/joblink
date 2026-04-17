@@ -51,8 +51,13 @@ export default function RecruiterApplications() {
   }, [])
 
   const filtered = useMemo(() => {
-    const atsThreshold = minAts === '' ? null : Number(minAts)
-    const matchThreshold = minMatch === '' ? null : Number(minMatch)
+    const parseThreshold = (value: string) => {
+      if (value.trim() === '') return null
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : null
+    }
+    const atsThreshold = parseThreshold(minAts)
+    const matchThreshold = parseThreshold(minMatch)
 
     return [...applications]
       .filter((a) => (statusFilter === 'ALL' ? true : a.status === statusFilter))

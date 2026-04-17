@@ -1,11 +1,38 @@
+const TECHNOLOGY_NORMALIZATIONS = [
+  [/node\.js/g, 'nodejs'],
+  [/c\+\+/g, 'cpp'],
+  [/c#/g, 'csharp'],
+  [/\.net/g, 'dotnet'],
+];
+
+const normalizeText = (text) => {
+  let normalized = String(text || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  TECHNOLOGY_NORMALIZATIONS.forEach(([pattern, replacement]) => {
+    normalized = normalized.replace(pattern, replacement);
+  });
+
+  return normalized
+    .replace(/[_/\\-]+/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ');
+};
+
 const normalize = (text) =>
-  String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
+  normalizeText(text)
     .split(/\s+/)
     .filter((w) => w.length > 1);
 
 const unique = (arr) => [...new Set(arr)];
+const SKILL_WEIGHT = 70;
+const KEYWORD_WEIGHT = 25;
+const DEFAULT_SKILL_SCORE = 35;
+const DEFAULT_KEYWORD_SCORE = 10;
+const CATEGORY_BONUS_POINTS = 5;
+const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
+const SINGLE_TOKEN_MATCH_LIMIT = 2;
 
 const buildResumeText = (resume) => {
   if (!resume) return '';
@@ -99,20 +126,32 @@ const calculateMatchScore = (resume, job) => {
   const resumeTextTokens = unique(normalize(buildResumeText(resume)));
   const resumeTokenSet = new Set(resumeTextTokens);
 
-  const jobSkills = (job.skills || []).map((s) => String(s).toLowerCase().trim()).filter(Boolean);
-  const jobSkillMatches = jobSkills.filter((s) => resumeTokenSet.has(s)).length;
+  const jobSkills = (job.skills || [])
+    .map((s) => unique(normalize(s)))
+    .filter((tokens) => tokens.length > 0);
+  const jobSkillMatches = jobSkills.reduce((matched, skillTokens) => {
+    const overlap = skillTokens.filter((token) => resumeTokenSet.has(token)).length;
+    const threshold =
+      skillTokens.length <= SINGLE_TOKEN_MATCH_LIMIT
+        ? 1
+        : Math.ceil(skillTokens.length * SKILL_MATCH_THRESHOLD_RATIO);
+    return matched + (overlap >= threshold ? 1 : 0);
+  }, 0);
   const skillScore = jobSkills.length
-    ? (jobSkillMatches / jobSkills.length) * 70
-    : 35;
+    ? (jobSkillMatches / jobSkills.length) * SKILL_WEIGHT
+    : DEFAULT_SKILL_SCORE;
 
   const jobKeywordTokens = unique(normalize(`${job.title || ''} ${job.description || ''}`));
   const keywordMatches = jobKeywordTokens.filter((k) => resumeTokenSet.has(k)).length;
   const keywordScore = jobKeywordTokens.length
-    ? Math.min(25, (keywordMatches / jobKeywordTokens.length) * 25)
-    : 10;
+    ? Math.min(KEYWORD_WEIGHT, (keywordMatches / jobKeywordTokens.length) * KEYWORD_WEIGHT)
+    : DEFAULT_KEYWORD_SCORE;
 
+  const categoryTokens = normalize(String(job.category || '').replace(/_/g, ' '));
   const categoryBonus =
-    resumeTokenSet.has(String(job.category || '').toLowerCase().replace(/_/g, ' ')) ? 5 : 0;
+    categoryTokens.length > 0 && categoryTokens.every((token) => resumeTokenSet.has(token))
+      ? CATEGORY_BONUS_POINTS
+      : 0;
 
   const total = Math.round(Math.min(100, skillScore + keywordScore + categoryBonus));
 

@@ -135,7 +135,11 @@ export default function Jobs() {
     try {
       if (savedJobIds.has(jobId)) {
         await api.delete(`/jobs/${jobId}/save`)
-        setSavedJobIds((prev) => { const next = new Set(prev); next.delete(jobId); return next })
+        setSavedJobIds((prev) => {
+          const next = new Set(prev)
+          next.delete(jobId)
+          return next
+        })
       } else {
         await api.post(`/jobs/${jobId}/save`)
         setSavedJobIds((prev) => new Set(prev).add(jobId))

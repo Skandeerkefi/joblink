@@ -31,7 +31,6 @@ router.get('/', async (req, res, next) => {
     if (req.query.skills) {
       const skillList = String(req.query.skills).split(',').map((s) => s.trim()).filter(Boolean);
       if (skillList.length > 0) {
-        filter.$or = filter.$or || [];
         filter.skills = {
           $elemMatch: {
             $in: skillList.map((s) => new RegExp(`^${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),

@@ -67,10 +67,10 @@ const columnHeaderColors: Record<string, string> = {
 
 function ApplicationCard({
   app,
-  isDragging = false,
+  isOverlayDragging = false,
 }: {
   app: Application
-  isDragging?: boolean
+  isOverlayDragging?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging: isSortableDragging } =
     useSortable({ id: app._id })
@@ -87,7 +87,7 @@ function ApplicationCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white rounded-lg border border-gray-200 p-3 cursor-grab active:cursor-grabbing shadow-sm ${isDragging ? 'shadow-lg rotate-1' : 'hover:shadow-md'} transition-shadow`}
+      className={`bg-white rounded-lg border border-gray-200 p-3 cursor-grab active:cursor-grabbing shadow-sm ${isOverlayDragging ? 'shadow-lg rotate-1' : 'hover:shadow-md'} transition-shadow`}
     >
       <div className="font-medium text-gray-900 text-sm truncate">{app.candidate?.name}</div>
       <div className="text-xs text-gray-500 truncate mb-1">{app.candidate?.email}</div>
@@ -314,7 +314,7 @@ export default function RecruiterApplications() {
 
           <DragOverlay>
             {activeApp ? (
-              <ApplicationCard app={activeApp} isDragging />
+              <ApplicationCard app={activeApp} isOverlayDragging />
             ) : null}
           </DragOverlay>
         </DndContext>

@@ -17,15 +17,17 @@ router.post('/', protect, authorize('candidate'), async (req, res, next) => {
     if (resumeId && !mongoose.Types.ObjectId.isValid(String(resumeId))) {
       return res.status(400).json({ success: false, message: 'Invalid resumeId' });
     }
-    const existing = await Application.findOne({ job: String(jobId), candidate: req.user.id });
+    const jobObjectId = new mongoose.Types.ObjectId(String(jobId));
+    const resumeObjectId = resumeId ? new mongoose.Types.ObjectId(String(resumeId)) : null;
+    const existing = await Application.findOne({ job: jobObjectId, candidate: req.user.id });
     if (existing) return res.status(400).json({ success: false, message: 'Already applied to this job' });
 
-    const job = await Job.findById(jobId);
+    const job = await Job.findById(jobObjectId);
     if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
 
     let resume;
-    if (resumeId) {
-      resume = await Resume.findById(resumeId);
+    if (resumeObjectId) {
+      resume = await Resume.findById(resumeObjectId);
       if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
       if (resume.candidate.toString() !== req.user.id) {
         return res.status(403).json({ success: false, message: 'Not authorized to use this resume' });
@@ -36,9 +38,9 @@ router.post('/', protect, authorize('candidate'), async (req, res, next) => {
     const match = calculateMatchScore(resume, job);
 
     const application = await Application.create({
-      job: jobId,
+      job: jobObjectId,
       candidate: req.user.id,
-      resume: resumeId || undefined,
+      resume: resumeObjectId || undefined,
       coverLetter,
       atsScore: ats.score,
       matchScore: match.score,

@@ -114,7 +114,7 @@ export default function RecruiterApplications() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
             >
               <option value="ALL">All statuses</option>
               {APPLICATION_STATUSES.map((s) => (
@@ -133,7 +133,7 @@ export default function RecruiterApplications() {
               value={minAts}
               onChange={(e) => setMinAts(e.target.value)}
               placeholder="e.g. 60"
-              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
             />
           </div>
           <div>
@@ -145,7 +145,7 @@ export default function RecruiterApplications() {
               value={minMatch}
               onChange={(e) => setMinMatch(e.target.value)}
               placeholder="e.g. 70"
-              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
             />
           </div>
           <div className="flex items-end">
@@ -200,7 +200,7 @@ export default function RecruiterApplications() {
                         value={app.status}
                         disabled={updatingId === app._id}
                         onChange={(e) => changeStatus(app._id, e.target.value)}
-                        className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                        className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                       >
                         {APPLICATION_STATUSES.map((s) => (
                           <option key={s.value} value={s.value}>
@@ -246,7 +246,7 @@ export default function RecruiterApplications() {
                     value={app.status}
                     disabled={updatingId === app._id}
                     onChange={(e) => changeStatus(app._id, e.target.value)}
-                    className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                    className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                   >
                     {APPLICATION_STATUSES.map((s) => (
                       <option key={s.value} value={s.value}>

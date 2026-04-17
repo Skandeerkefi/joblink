@@ -91,7 +91,7 @@ export default function AtsChecker() {
           <select
             value={resumeId}
             onChange={(e) => setResumeId(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+            className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
           >
             {resumes.map((r) => (
               <option key={r._id} value={r._id}>
@@ -106,7 +106,7 @@ export default function AtsChecker() {
           <select
             value={jobId}
             onChange={(e) => setJobId(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded-lg px-3 py-2 text-sm"
+            className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">No job selected</option>
             {jobs.map((j) => (

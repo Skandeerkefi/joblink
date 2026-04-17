@@ -80,7 +80,7 @@ export default function AdminUsers() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
           >
             <option value="all">All</option>
             <option value="recruiter">Recruiters</option>
@@ -119,21 +119,21 @@ export default function AdminUsers() {
                     <input
                       value={u.name}
                       onChange={(e) => setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, name: e.target.value } : x)))}
-                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                     />
                   </td>
                   <td className="px-4 py-3">
                     <input
                       value={u.email}
                       onChange={(e) => setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, email: e.target.value } : x)))}
-                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                     />
                   </td>
                   <td className="px-4 py-3">
                     <select
                       value={u.role}
                       onChange={(e) => setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, role: e.target.value as UserRole } : x)))}
-                      className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-black rounded px-2 py-1 text-sm"
+                      className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                     >
                       <option value="candidate">Candidate</option>
                       <option value="recruiter">Recruiter</option>

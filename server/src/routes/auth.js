@@ -13,8 +13,17 @@ const generateToken = (id, role) => {
 };
 
 const getClientUrl = (req) => {
+  const configuredOrigins = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+  const requestOrigin = req.get('origin');
+
+  if (requestOrigin && (!configuredOrigins.length || configuredOrigins.includes(requestOrigin))) {
+    return requestOrigin;
+  }
+
   if (process.env.CLIENT_URL) {
-    return process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)[0];
+    return configuredOrigins[0];
   }
 
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {

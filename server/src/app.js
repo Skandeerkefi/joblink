@@ -7,8 +7,10 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+app.locals.dbConnectionError = null;
 
 connectDB().catch((error) => {
+  app.locals.dbConnectionError = error;
   console.error(`Database connection failed: ${error.message}`);
 });
 
@@ -54,6 +56,16 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+app.use((req, res, next) => {
+  if (app.locals.dbConnectionError) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection unavailable. Check server configuration.',
+    });
+  }
+  return next();
+});
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));

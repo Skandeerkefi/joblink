@@ -1,3 +1,3 @@
-const apiUrl = import.meta.env.VITE_API_URL || ''
+const rawApiUrl = import.meta.env.VITE_API_URL || ''
 
-export const API_BASE_URL = apiUrl ? apiUrl.replace(/\/api\/?$/, '') : ''
+export const API_BASE_URL = rawApiUrl ? rawApiUrl.replace(/\/api\/?$/, '') : ''

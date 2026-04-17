@@ -36,6 +36,7 @@ To send real verification emails, configure these server env vars:
 - `SMTP_SOCKET_TIMEOUT_MS` (default `20000`)
 
 If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
+If SMTP resolves to IPv6 but the host network cannot route IPv6, the server automatically retries using an IPv4 SMTP address.
 
 ### Client
 

@@ -14,7 +14,7 @@ const generateToken = (id, role) => {
 
 const getClientUrl = (req) => {
   if (process.env.CLIENT_URL) {
-    return process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).find(Boolean);
+    return process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)[0];
   }
 
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {

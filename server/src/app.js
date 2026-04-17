@@ -15,11 +15,29 @@ connectDB().catch((error) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = process.env.CLIENT_URL
+const configuredOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
-  : true;
+  : [];
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+const inferredOrigins = [process.env.VERCEL_PROJECT_PRODUCTION_URL, process.env.VERCEL_URL]
+  .filter(Boolean)
+  .map((host) => `https://${host}`);
+
+if (process.env.NODE_ENV !== 'production') {
+  inferredOrigins.push('http://localhost:5173');
+}
+
+const allowedOrigins = [...new Set([...configuredOrigins, ...inferredOrigins])];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

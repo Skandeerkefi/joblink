@@ -6,4 +6,16 @@
   body {
     @apply bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100 transition-colors;
   }
+
+  /* Ensure all form controls are readable in dark mode */
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .dark textarea,
+  .dark select {
+    color: rgb(243 244 246); /* gray-100 */
+  }
+
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"])::placeholder,
+  .dark textarea::placeholder {
+    color: rgb(107 114 128); /* gray-500 */
+  }
 }

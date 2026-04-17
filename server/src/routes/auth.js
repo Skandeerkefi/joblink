@@ -135,7 +135,7 @@ router.post(
         return res.json({ success: true, message: 'If the account exists, a verification email has been sent.' });
       }
       if (user.emailVerified) {
-        return res.status(400).json({ success: false, message: 'Email is already verified.' });
+        return res.json({ success: true, message: 'If the account exists, a verification email has been sent.' });
       }
 
       const verificationToken = user.generateEmailVerificationToken();

@@ -13,6 +13,7 @@ const createTransporter = () => {
     });
   }
 
+  // Development fallback: output email payload to logs when SMTP is not configured.
   return nodemailer.createTransport({ jsonTransport: true });
 };
 

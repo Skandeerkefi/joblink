@@ -21,6 +21,11 @@ const configuredOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
   : [];
 
+// CORS Middleware
+const allowedOrigins = [
+  'https://joblink-zeta.vercel.app',
+];
+
 const inferredOrigins = [process.env.VERCEL_PROJECT_PRODUCTION_URL, process.env.VERCEL_URL]
   .filter(Boolean)
   .map((host) => `https://${host}`);
@@ -29,12 +34,12 @@ if (process.env.NODE_ENV !== 'production') {
   inferredOrigins.push('http://localhost:5173');
 }
 
-const allowedOrigins = [...new Set([...configuredOrigins, ...inferredOrigins])];
+const corsOrigins = [...new Set([...allowedOrigins, ...configuredOrigins, ...inferredOrigins])];
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin || corsOrigins.includes(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,

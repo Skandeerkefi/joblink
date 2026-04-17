@@ -1,11 +1,27 @@
 const nodemailer = require('nodemailer');
 
+const parseBoolean = (value, fallback = false) => {
+  if (value === undefined || value === null || String(value).trim() === '') return fallback;
+  return String(value).trim().toLowerCase() === 'true';
+};
+
+const parseNumber = (value, fallback) => {
+  const normalized = String(value ?? '').trim();
+  if (!normalized) return fallback;
+  const parsed = Number.parseInt(normalized, 10);
+  // SMTP ports/timeouts should be configured as positive integers.
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 const createTransporter = () => {
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+      port: parseNumber(process.env.SMTP_PORT, 587),
+      secure: parseBoolean(process.env.SMTP_SECURE, false),
+      connectionTimeout: parseNumber(process.env.SMTP_CONNECTION_TIMEOUT_MS, 15000),
+      greetingTimeout: parseNumber(process.env.SMTP_GREETING_TIMEOUT_MS, 10000),
+      socketTimeout: parseNumber(process.env.SMTP_SOCKET_TIMEOUT_MS, 20000),
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,

@@ -52,6 +52,9 @@ const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir })
 };
 
 const parseResumeBuffer = async ({ buffer, mimeType, originalName }) => {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('Invalid resume file buffer');
+  }
   const ext = getFileExtension(originalName);
   if (isPdf(mimeType, ext)) {
     const result = await pdfParse(buffer);
@@ -62,7 +65,34 @@ const parseResumeBuffer = async ({ buffer, mimeType, originalName }) => {
     return cleanText(result.value);
   }
   if (isText(mimeType, ext)) {
-    return cleanText(Buffer.from(buffer || '').toString('utf8'));
+    return cleanText(buffer.toString('utf8'));
+  }
+  return '';
+};
+
+const extractEmail = (text) => {
+  const tokens = String(text || '').split(/\s+/);
+  for (const rawToken of tokens) {
+    const token = rawToken.replace(/[<>(){}[\],;:"'`]/g, '').trim();
+    if (!token || !token.includes('@')) continue;
+    if ((token.match(/@/g) || []).length !== 1) continue;
+    const [localPart, domainPart] = token.split('@');
+    if (!localPart || !domainPart) continue;
+    if (!domainPart.includes('.')) continue;
+    if (domainPart.startsWith('.') || domainPart.endsWith('.')) continue;
+    if (domainPart.includes('..')) continue;
+    return token;
+  }
+  return '';
+};
+
+const extractPhone = (text) => {
+  const candidates = String(text || '').match(/\+?[\d()\-\s]{8,20}/g) || [];
+  for (const candidate of candidates) {
+    const digits = candidate.replace(/\D/g, '');
+    if (digits.length >= 8 && digits.length <= 15) {
+      return candidate.trim();
+    }
   }
   return '';
 };
@@ -159,8 +189,8 @@ const extractManualDataFromText = (text) => {
     if (currentSection) sectionLines[currentSection].push(line);
   }
 
-  const emailMatch = String(text || '').match(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i);
-  const phoneMatch = String(text || '').match(/(?:\+\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,4}/);
+  const email = extractEmail(text);
+  const phone = extractPhone(text);
   const urlMatches = String(text || '')
     .match(/(?:https?:\/\/|www\.)[^\s<>()]+|(?:linkedin\.com|github\.com)\/[^\s<>()]+/gi) || [];
   const links = uniqueStrings(urlMatches.map((u) => (u.startsWith('http') ? u : `https://${u}`))).slice(0, 5);
@@ -229,8 +259,8 @@ const extractManualDataFromText = (text) => {
   return {
     personalInfo: {
       fullName,
-      email: emailMatch ? emailMatch[0] : '',
-      phone: phoneMatch ? phoneMatch[0] : '',
+      email,
+      phone,
       location,
       links,
     },

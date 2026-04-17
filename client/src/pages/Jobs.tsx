@@ -159,7 +159,15 @@ export default function Jobs() {
     return JOB_TYPES.find((t) => t.value === value)?.label || value.replace(/_/g, ' ')
   }
 
-  const hasActiveFilters = !!(selectedCategory || searchQuery || locationQuery || skillsQuery || selectedJobType || remoteOnly || sort !== 'newest')
+  const hasActiveFilters = [
+    selectedCategory,
+    searchQuery,
+    locationQuery,
+    skillsQuery,
+    selectedJobType,
+    remoteOnly,
+    sort !== 'newest',
+  ].some(Boolean)
 
   return (
     <div>

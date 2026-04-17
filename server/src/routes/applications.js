@@ -81,7 +81,7 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
       STATUSES.forEach((s) => { grouped[s] = []; });
       applications.forEach((app) => {
         if (grouped[app.status]) grouped[app.status].push(app);
-        // Skip applications with unrecognized status rather than silently miscategorizing
+        else console.warn(`Unhandled application status "${app.status}" for application ${app._id}`);
       });
       return res.json({ success: true, grouped });
     }

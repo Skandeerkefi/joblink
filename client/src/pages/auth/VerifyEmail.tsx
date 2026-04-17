@@ -26,9 +26,9 @@ export default function VerifyEmail() {
   }
 
   useEffect(() => {
-    if (token) verify(token)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (searchParams.get('token') && token) verify(token)
+  // verify only auto-triggers for token coming from URL query param
+  }, [token, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center -mt-8 px-4 bg-black">

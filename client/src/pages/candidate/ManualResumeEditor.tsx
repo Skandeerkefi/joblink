@@ -94,7 +94,7 @@ export default function ManualResumeEditor() {
         ...base.personalInfo,
         ...(incoming.personalInfo || {}),
         links: Array.isArray(incoming.personalInfo?.links)
-          ? incoming.personalInfo?.links || []
+          ? incoming.personalInfo.links
           : base.personalInfo.links,
       },
       skills: Array.isArray(incoming.skills) ? incoming.skills : base.skills,

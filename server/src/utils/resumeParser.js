@@ -22,19 +22,31 @@ const isDocx = (mimeType, ext) =>
 const isText = (mimeType, ext) =>
   String(mimeType || '').toLowerCase().startsWith('text/') || ext === '.txt';
 
-const parseResumeFile = async ({ filePath, mimeType, originalName }) => {
-  const ext = getFileExtension(originalName || filePath);
+const resolveSafePath = (filePath, allowedDir) => {
+  const resolvedFile = path.resolve(String(filePath || ''));
+  if (!allowedDir) return resolvedFile;
+  const resolvedAllowedDir = path.resolve(String(allowedDir || ''));
+  const relative = path.relative(resolvedAllowedDir, resolvedFile);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid file path');
+  }
+  return resolvedFile;
+};
+
+const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir }) => {
+  const safePath = resolveSafePath(filePath, allowedDir);
+  const ext = getFileExtension(originalName || safePath);
   if (isPdf(mimeType, ext)) {
-    const buffer = await fs.promises.readFile(filePath);
+    const buffer = await fs.promises.readFile(safePath);
     const result = await pdfParse(buffer);
     return cleanText(result.text);
   }
   if (isDocx(mimeType, ext)) {
-    const result = await mammoth.extractRawText({ path: filePath });
+    const result = await mammoth.extractRawText({ path: safePath });
     return cleanText(result.value);
   }
   if (isText(mimeType, ext)) {
-    return cleanText(await fs.promises.readFile(filePath, 'utf8'));
+    return cleanText(await fs.promises.readFile(safePath, 'utf8'));
   }
   return '';
 };
@@ -131,7 +143,7 @@ const extractManualDataFromText = (text) => {
     if (currentSection) sectionLines[currentSection].push(line);
   }
 
-  const emailMatch = String(text || '').match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  const emailMatch = String(text || '').match(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i);
   const phoneMatch = String(text || '').match(/(?:\+\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,4}/);
   const urlMatches = String(text || '')
     .match(/(?:https?:\/\/|www\.)[^\s<>()]+|(?:linkedin\.com|github\.com)\/[^\s<>()]+/gi) || [];
@@ -149,7 +161,7 @@ const extractManualDataFromText = (text) => {
 
   const location = headingBlocks.find((line) => {
     if (!line || line.length < 3 || line.length > 60) return false;
-    if (/@|\d|http|www|linkedin|github/i.test(line)) return false;
+    if (/@|\d{3,}|http|www|linkedin|github/i.test(line)) return false;
     return /,/.test(line) || /\b(?:city|country|state|remote|onsite)\b/i.test(line);
   }) || '';
 
@@ -233,6 +245,7 @@ const ensureUploadedResumeParsed = async (resume, uploadsDir) => {
       filePath,
       mimeType: resume.mimeType,
       originalName: resume.originalName,
+      allowedDir: uploadsDir,
     });
     if (parsedText) {
       resume.parsedText = parsedText;

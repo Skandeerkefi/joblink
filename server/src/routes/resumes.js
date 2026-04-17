@@ -49,12 +49,14 @@ router.post('/', protect, authorize('candidate'), upload.single('resume'), async
 // POST /api/resumes/manual/prefill  (parse upload and prefill manual CV draft)
 router.post('/manual/prefill', protect, authorize('candidate'), upload.single('resume'), async (req, res, next) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+  const uploadedFilePath = path.join(uploadsDir, req.file.filename);
 
   try {
     const parsedText = await parseResumeFile({
-      filePath: req.file.path,
+      filePath: uploadedFilePath,
       mimeType: req.file.mimetype,
       originalName: req.file.originalname,
+      allowedDir: uploadsDir,
     });
     const manualData = extractManualDataFromText(parsedText);
     const basename = path.parse(req.file.originalname || 'CV').name || 'My CV';
@@ -71,8 +73,8 @@ router.post('/manual/prefill', protect, authorize('candidate'), upload.single('r
   } catch (err) {
     return next(err);
   } finally {
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (fs.existsSync(uploadedFilePath)) {
+      fs.unlinkSync(uploadedFilePath);
     }
   }
 });

@@ -10,7 +10,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
 const {
   ensureUploadedResumeParsed,
-  parseResumeFile,
+  parseResumeBuffer,
   extractManualDataFromText,
 } = require('../utils/resumeParser');
 
@@ -25,6 +25,7 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+const uploadInMemory = multer({ storage: multer.memoryStorage() });
 
 // POST /api/resumes  (file upload)
 router.post('/', protect, authorize('candidate'), upload.single('resume'), async (req, res, next) => {
@@ -47,16 +48,14 @@ router.post('/', protect, authorize('candidate'), upload.single('resume'), async
 });
 
 // POST /api/resumes/manual/prefill  (parse upload and prefill manual CV draft)
-router.post('/manual/prefill', protect, authorize('candidate'), upload.single('resume'), async (req, res, next) => {
+router.post('/manual/prefill', protect, authorize('candidate'), uploadInMemory.single('resume'), async (req, res, next) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  const uploadedFilePath = path.join(uploadsDir, req.file.filename);
 
   try {
-    const parsedText = await parseResumeFile({
-      filePath: uploadedFilePath,
+    const parsedText = await parseResumeBuffer({
+      buffer: req.file.buffer,
       mimeType: req.file.mimetype,
       originalName: req.file.originalname,
-      allowedDir: uploadsDir,
     });
     const manualData = extractManualDataFromText(parsedText);
     const basename = path.parse(req.file.originalname || 'CV').name || 'My CV';
@@ -72,10 +71,6 @@ router.post('/manual/prefill', protect, authorize('candidate'), upload.single('r
     });
   } catch (err) {
     return next(err);
-  } finally {
-    if (fs.existsSync(uploadedFilePath)) {
-      fs.unlinkSync(uploadedFilePath);
-    }
   }
 });
 

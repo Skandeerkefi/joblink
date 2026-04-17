@@ -51,6 +51,22 @@ const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir })
   return '';
 };
 
+const parseResumeBuffer = async ({ buffer, mimeType, originalName }) => {
+  const ext = getFileExtension(originalName);
+  if (isPdf(mimeType, ext)) {
+    const result = await pdfParse(buffer);
+    return cleanText(result.text);
+  }
+  if (isDocx(mimeType, ext)) {
+    const result = await mammoth.extractRawText({ buffer });
+    return cleanText(result.value);
+  }
+  if (isText(mimeType, ext)) {
+    return cleanText(Buffer.from(buffer || '').toString('utf8'));
+  }
+  return '';
+};
+
 const SECTION_KEYWORDS = {
   summary: ['summary', 'professional summary', 'profile', 'about me'],
   skills: ['skills', 'technical skills', 'core skills', 'competencies'],
@@ -272,6 +288,7 @@ const ensureUploadedResumeParsed = async (resume, uploadsDir) => {
 
 module.exports = {
   parseResumeFile,
+  parseResumeBuffer,
   extractManualDataFromText,
   ensureUploadedResumeParsed,
 };

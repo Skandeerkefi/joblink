@@ -37,6 +37,7 @@ To send real verification emails, configure these server env vars:
 
 If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
 If SMTP resolves to IPv6 but the host network cannot route IPv6, the server automatically retries using an IPv4 SMTP address.
+When the SMTP provider is unreachable, auth endpoints now return `503 Service Unavailable` with a clear message instead of a generic `500` error.
 
 ### Client
 

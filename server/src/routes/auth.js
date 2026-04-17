@@ -59,11 +59,22 @@ router.post(
 
       const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
-      await sendVerificationEmail({
-        email: user.email,
-        name: user.name,
-        verificationUrl,
-      });
+      try {
+        await sendVerificationEmail({
+          email: user.email,
+          name: user.name,
+          verificationUrl,
+        });
+      } catch (emailError) {
+        console.error(`Verification email send failed during registration for ${user.email}:`, emailError.message || emailError);
+        await User.deleteOne({ _id: user._id }).catch((cleanupError) => {
+          console.error(`Failed to roll back user after email failure for ${user.email}:`, cleanupError.message || cleanupError);
+        });
+        return res.status(503).json({
+          success: false,
+          message: 'Registration is temporarily unavailable because verification email could not be sent. Please try again later.',
+        });
+      }
 
       const response = {
         success: true,
@@ -168,11 +179,19 @@ router.post(
 
       const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
-      await sendVerificationEmail({
-        email: user.email,
-        name: user.name,
-        verificationUrl,
-      });
+      try {
+        await sendVerificationEmail({
+          email: user.email,
+          name: user.name,
+          verificationUrl,
+        });
+      } catch (emailError) {
+        console.error(`Verification email resend failed for ${user.email}:`, emailError.message || emailError);
+        return res.status(503).json({
+          success: false,
+          message: 'Verification email service is temporarily unavailable. Please try again later.',
+        });
+      }
 
       const response = { success: true, message: 'Verification email sent.' };
       if (process.env.NODE_ENV !== 'production') {

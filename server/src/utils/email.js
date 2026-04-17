@@ -6,7 +6,10 @@ const parseBoolean = (value, fallback = false) => {
 };
 
 const parseNumber = (value, fallback) => {
-  const parsed = Number.parseInt(String(value ?? ''), 10);
+  const normalized = String(value ?? '').trim();
+  if (!normalized) return fallback;
+  const parsed = Number.parseInt(normalized, 10);
+  // SMTP ports/timeouts should be configured as positive integers.
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 

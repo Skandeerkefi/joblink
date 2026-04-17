@@ -20,8 +20,15 @@ interface Job {
 
 interface Resume {
   _id: string
+  type?: 'UPLOAD' | 'MANUAL'
+  title?: string
   originalName: string
   fileUrl: string
+}
+
+interface ResumeAnalysis {
+  atsScore: number
+  matchScore: number | null
 }
 
 const categoryColors: Record<string, string> = {
@@ -55,6 +62,8 @@ export default function JobDetail() {
   const [isSaved, setIsSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [similarJobs, setSimilarJobs] = useState<Job[]>([])
+  const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
 
   useEffect(() => {
     fetchJob()
@@ -96,6 +105,29 @@ export default function JobDetail() {
     }
   }
 
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      if (!selectedResume || !id) {
+        setAnalysis(null)
+        return
+      }
+      setAnalysisLoading(true)
+      try {
+        const res = await api.get(`/resumes/${selectedResume}/analysis`, { params: { jobId: id } })
+        setAnalysis({
+          atsScore: res.data.analysis.atsScore,
+          matchScore: res.data.analysis.matchScore,
+        })
+      } catch {
+        setAnalysis(null)
+      } finally {
+        setAnalysisLoading(false)
+      }
+    }
+
+    fetchAnalysis()
+  }, [selectedResume, id])
+
   const fetchSimilar = async () => {
     try {
       const res = await api.get(`/jobs/${id}/similar`)
@@ -110,12 +142,17 @@ export default function JobDetail() {
     setSuccess('')
     setApplying(true)
     try {
-      await api.post('/applications', {
+      const res = await api.post('/applications', {
         jobId: id,
         resumeId: selectedResume || undefined,
         coverLetter: coverLetter || undefined,
       })
-      setSuccess('Application submitted successfully!')
+      const score = res.data?.score
+      setSuccess(
+        score
+          ? `Application submitted! Match score: ${score.match}/100 • ATS score: ${score.ats}/100`
+          : 'Application submitted successfully!'
+      )
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setError(e.response?.data?.message || 'Failed to apply')
@@ -254,13 +291,28 @@ export default function JobDetail() {
                   onChange={(e) => setSelectedResume(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">No resume selected</option>
-                  {resumes.map((r) => (
-                    <option key={r._id} value={r._id}>
-                      {r.originalName}
-                    </option>
-                  ))}
-                </select>
+                    <option value="">No resume selected</option>
+                    {resumes.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.type === 'MANUAL' ? r.title || 'Manual CV' : r.originalName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+            )}
+
+            {selectedResume && (
+              <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                {analysisLoading ? (
+                  <p className="text-sm text-gray-500">Calculating ATS and match score...</p>
+                ) : analysis ? (
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <p><span className="font-semibold">ATS score:</span> {analysis.atsScore}/100</p>
+                    <p><span className="font-semibold">Job match score:</span> {analysis.matchScore ?? 0}/100</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Unable to analyze this resume right now.</p>
+                )}
               </div>
             )}
 

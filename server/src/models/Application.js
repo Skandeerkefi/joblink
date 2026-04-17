@@ -10,6 +10,8 @@ const applicationSchema = new mongoose.Schema({
     default: 'APPLIED',
   },
   coverLetter: { type: String },
+  atsScore: { type: Number, min: 0, max: 100 },
+  matchScore: { type: Number, min: 0, max: 100 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

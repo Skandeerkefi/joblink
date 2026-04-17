@@ -34,6 +34,8 @@ interface Application {
   }
   status: string
   coverLetter?: string
+  atsScore?: number
+  matchScore?: number
   createdAt: string
 }
 
@@ -107,6 +109,12 @@ function ApplicationCard({
       <div className="text-xs text-gray-400 mt-1">
         {new Date(app.createdAt).toLocaleDateString()}
       </div>
+      {(app.atsScore !== undefined || app.matchScore !== undefined) && (
+        <div className="mt-2 text-[11px] text-gray-500">
+          ATS: <span className="font-semibold text-gray-300">{app.atsScore ?? '—'}</span> · Match:{' '}
+          <span className="font-semibold text-gray-300">{app.matchScore ?? '—'}</span>
+        </div>
+      )}
     </div>
   )
 }

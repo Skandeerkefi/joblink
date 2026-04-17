@@ -5,6 +5,7 @@ interface User {
   name: string
   email: string
   role: 'candidate' | 'recruiter'
+  emailVerified?: boolean
 }
 
 interface AuthContextType {

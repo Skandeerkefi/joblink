@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-gray-100;
+  }
+}
+
+@layer components {
+  .jl-surface {
+    @apply bg-gray-950 border border-gray-800;
+  }
+}

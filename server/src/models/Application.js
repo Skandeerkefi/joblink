@@ -11,7 +11,9 @@ const applicationSchema = new mongoose.Schema({
   },
   coverLetter: { type: String },
   atsScore: { type: Number, min: 0, max: 100 },
+  atsBreakdown: { type: mongoose.Schema.Types.Mixed },
   matchScore: { type: Number, min: 0, max: 100 },
+  matchBreakdown: { type: mongoose.Schema.Types.Mixed },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

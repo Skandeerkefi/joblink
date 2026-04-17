@@ -15,21 +15,11 @@ A full-stack job platform built with the MERN stack (MongoDB, Express, React, No
 cd server
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI, JWT secret and optional Resend credentials for email verification
+# Edit .env with your MongoDB URI and JWT secret
 npm run dev
 ```
 
 Server runs at http://localhost:5000
-
-### Email verification (optional Resend config)
-
-To send real verification emails, configure these server env vars:
-
-- `RESEND_API_KEY` (Resend API key)
-- `RESEND_FROM` (verified sender address, e.g. `onboarding@resend.dev`)
-
-If Resend is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
-When the email provider is unreachable, auth endpoints return `503 Service Unavailable` with a clear message instead of a generic `500` error.
 
 ### Client
 
@@ -66,7 +56,6 @@ Set these environment variables in Vercel:
 - `MONGO_URI`
 - `JWT_SECRET`
 - `CLIENT_URL` (your deployed frontend URL; comma-separated list is supported)
-- Optional email vars: `RESEND_API_KEY`, `RESEND_FROM`
 
 ## Tech Stack
 

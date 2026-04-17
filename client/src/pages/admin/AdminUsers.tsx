@@ -73,7 +73,7 @@ export default function AdminUsers() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin · User Management</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Manage recruiters and candidates (edit, delete, verify).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Manage recruiters and candidates (edit and delete).</p>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600 dark:text-gray-300">Role</label>

@@ -48,7 +48,9 @@ router.post('/', protect, authorize('candidate'), async (req, res, next) => {
       resume: resumeObjectId || undefined,
       coverLetter,
       atsScore: ats.score,
+      atsBreakdown: ats.breakdown,
       matchScore: match.score,
+      matchBreakdown: match.breakdown,
     });
     res.status(201).json({ success: true, application, score: { ats: ats.score, match: match.score } });
   } catch (err) {
@@ -61,7 +63,7 @@ router.get('/mine', protect, authorize('candidate'), async (req, res, next) => {
   try {
     const applications = await Application.find({ candidate: req.user.id })
       .populate('job', 'title location category jobType')
-      .populate('resume', 'originalName fileUrl')
+      .populate('resume', 'type title originalName fileUrl manualData')
       .sort({ createdAt: -1 });
     res.json({ success: true, applications });
   } catch (err) {
@@ -77,8 +79,8 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
     const applications = await Application.find({ job: { $in: jobIds } })
       .populate('job', 'title location category')
       .populate('candidate', 'name email')
-      .populate('resume', 'originalName fileUrl')
-      .sort({ createdAt: -1 });
+      .populate('resume', 'type title originalName fileUrl manualData')
+      .sort({ matchScore: -1, createdAt: -1 });
 
     if (req.query.group === 'true') {
       const grouped = {};
@@ -91,7 +93,26 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
       return res.json({ success: true, grouped });
     }
 
-    res.json({ success: true, applications });
+    const applicationsByJob = {};
+    applications.forEach((app) => {
+      const job = app.job;
+      if (!job) return;
+      const key = String(job._id);
+      if (!applicationsByJob[key]) {
+        applicationsByJob[key] = {
+          job: {
+            _id: job._id,
+            title: job.title,
+            location: job.location,
+            category: job.category,
+          },
+          applications: [],
+        };
+      }
+      applicationsByJob[key].applications.push(app);
+    });
+
+    res.json({ success: true, applications, applicationsByJob: Object.values(applicationsByJob) });
   } catch (err) {
     next(err);
   }

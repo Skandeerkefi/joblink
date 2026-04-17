@@ -3,14 +3,18 @@ const path = require('path');
 const pdfParseModule = require('pdf-parse');
 const mammoth = require('mammoth');
 
-const pdfParseFunction =
-  (typeof pdfParseModule === 'function' && pdfParseModule) ||
-  (typeof pdfParseModule?.default === 'function' && pdfParseModule.default) ||
-  (typeof pdfParseModule?.pdfParse === 'function' && pdfParseModule.pdfParse);
+const pickFunction = (candidates) => candidates.find((candidate) => typeof candidate === 'function');
 
-const PDFParseClass =
-  (typeof pdfParseModule?.PDFParse === 'function' && pdfParseModule.PDFParse) ||
-  (typeof pdfParseModule?.default?.PDFParse === 'function' && pdfParseModule.default.PDFParse);
+const pdfParseFunction = pickFunction([
+  pdfParseModule,
+  pdfParseModule?.default,
+  pdfParseModule?.pdfParse,
+]);
+
+const PDFParseConstructor = pickFunction([
+  pdfParseModule?.PDFParse,
+  pdfParseModule?.default?.PDFParse,
+]);
 
 const cleanText = (text) =>
   String(text || '')
@@ -48,17 +52,15 @@ const parsePdfBuffer = async (buffer) => {
     const text = typeof result?.text === 'string' ? result.text : '';
     return cleanText(text);
   }
-  if (typeof PDFParseClass === 'function') {
-    const parser = new PDFParseClass({ data: buffer });
+  if (typeof PDFParseConstructor === 'function') {
+    const parser = new PDFParseConstructor({ data: buffer });
     try {
       const result = await parser.getText();
       const text = typeof result?.text === 'string' ? result.text : typeof result === 'string' ? result : '';
       return cleanText(text);
     } finally {
       if (typeof parser.destroy === 'function') {
-        try {
-          await parser.destroy();
-        } catch (_) {}
+        await parser.destroy();
       }
     }
   }

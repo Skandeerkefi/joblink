@@ -5,7 +5,6 @@ import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
-import VerifyEmail from './pages/auth/VerifyEmail'
 import Home from './pages/Home'
 import Jobs from './pages/Jobs'
 import JobDetail from './pages/JobDetail'
@@ -31,7 +30,6 @@ function App() {
             <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/" element={<Home />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />

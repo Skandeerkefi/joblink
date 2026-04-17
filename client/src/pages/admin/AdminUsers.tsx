@@ -10,7 +10,6 @@ interface AdminUser {
   name: string
   email: string
   role: UserRole
-  emailVerified: boolean
   createdAt: string
 }
 
@@ -38,7 +37,7 @@ export default function AdminUsers() {
     fetchUsers(roleFilter)
   }, [roleFilter])
 
-  const updateUser = async (id: string, updates: Partial<Pick<AdminUser, 'name' | 'email' | 'role' | 'emailVerified'>>) => {
+  const updateUser = async (id: string, updates: Partial<Pick<AdminUser, 'name' | 'email' | 'role'>>) => {
     setSavingId(id)
     setError('')
     try {
@@ -73,7 +72,7 @@ export default function AdminUsers() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin · User Management</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Manage recruiters and candidates (edit, delete, verify).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Manage recruiters and candidates (edit and delete).</p>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600 dark:text-gray-300">Role</label>
@@ -107,7 +106,6 @@ export default function AdminUsers() {
                 <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Name</th>
                 <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Email</th>
                 <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Role</th>
-                <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Verified</th>
                 <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Created</th>
                 <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Actions</th>
               </tr>
@@ -139,22 +137,12 @@ export default function AdminUsers() {
                       <option value="recruiter">Recruiter</option>
                     </select>
                   </td>
-                  <td className="px-4 py-3">
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={u.emailVerified}
-                        onChange={(e) => setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, emailVerified: e.target.checked } : x)))}
-                      />
-                      {u.emailVerified ? 'Yes' : 'No'}
-                    </label>
-                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-3">
                       <button
                         disabled={savingId === u._id}
-                        onClick={() => updateUser(u._id, { name: u.name, email: u.email, role: u.role, emailVerified: u.emailVerified })}
+                        onClick={() => updateUser(u._id, { name: u.name, email: u.email, role: u.role })}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
                       >
                         Save

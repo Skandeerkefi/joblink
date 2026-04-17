@@ -6,7 +6,6 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'candidate' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [devVerificationUrl, setDevVerificationUrl] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -17,12 +16,10 @@ export default function Register() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    setDevVerificationUrl('')
     setLoading(true)
     try {
       const res = await api.post('/auth/register', form)
-      setSuccess(res.data.message || 'Account created. Please verify your email.')
-      setDevVerificationUrl(res.data.devVerificationUrl || '')
+      setSuccess(res.data.message || 'Account created successfully. You can now sign in.')
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string; errors?: Array<{ msg: string }> } } }
       setError(
@@ -49,14 +46,6 @@ export default function Register() {
         {success && (
           <div className="bg-green-900/30 border border-green-800 text-green-300 px-4 py-3 rounded-lg mb-6">
             {success}
-            {devVerificationUrl && (
-              <div className="mt-2 text-xs break-all">
-                Dev link:{' '}
-                <a href={devVerificationUrl} className="underline text-green-200">
-                  {devVerificationUrl}
-                </a>
-              </div>
-            )}
           </div>
         )}
 

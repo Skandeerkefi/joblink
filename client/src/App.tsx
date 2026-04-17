@@ -13,7 +13,6 @@ import MyApplications from './pages/candidate/MyApplications'
 import MyResumes from './pages/candidate/MyResumes'
 import ManualResumeEditor from './pages/candidate/ManualResumeEditor'
 import CandidateDashboard from './pages/candidate/CandidateDashboard'
-import CandidateProfile from './pages/candidate/CandidateProfile'
 import SavedJobs from './pages/candidate/SavedJobs'
 import AtsChecker from './pages/candidate/AtsChecker'
 import RecruiterJobs from './pages/recruiter/RecruiterJobs'
@@ -43,14 +42,6 @@ function App() {
               element={
                 <ProtectedRoute role="candidate">
                   <CandidateDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/candidate/profile"
-              element={
-                <ProtectedRoute role="candidate">
-                  <CandidateProfile />
                 </ProtectedRoute>
               }
             />

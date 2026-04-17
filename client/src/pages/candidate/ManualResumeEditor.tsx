@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import api from '../../api/axios'
 import ResumePdf from '../../components/ResumePdf'
@@ -73,7 +73,9 @@ function TextArea({
 export default function ManualResumeEditor() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const isEdit = Boolean(id)
+  const prefillAppliedRef = useRef(false)
 
   const [title, setTitle] = useState('My CV')
   const [data, setData] = useState<ManualData>(emptyManualData())
@@ -83,31 +85,54 @@ export default function ManualResumeEditor() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const mergeManualData = (incoming: Partial<ManualData> = {}): ManualData => {
+    const base = emptyManualData()
+    return {
+      ...base,
+      ...incoming,
+      personalInfo: {
+        ...base.personalInfo,
+        ...(incoming.personalInfo || {}),
+        links: Array.isArray(incoming.personalInfo?.links)
+          ? incoming.personalInfo.links
+          : base.personalInfo.links,
+      },
+      skills: Array.isArray(incoming.skills) ? incoming.skills : base.skills,
+      certifications: Array.isArray(incoming.certifications)
+        ? incoming.certifications
+        : base.certifications,
+      education: Array.isArray(incoming.education) ? incoming.education : base.education,
+      experience: Array.isArray(incoming.experience) ? incoming.experience : base.experience,
+      projects: Array.isArray(incoming.projects) ? incoming.projects : base.projects,
+    }
+  }
+
   useEffect(() => {
     if (isEdit && id) {
       api.get(`/resumes/${id}`)
         .then((res) => {
           const r = res.data.resume
           const incoming = r.manualData || {}
-          const base = emptyManualData()
           setTitle(r.title || 'My CV')
-          // Merge with defaults so newly added fields (e.g. certifications) exist on older resumes.
-          setData({
-            ...base,
-            ...incoming,
-            skills: Array.isArray(incoming.skills) ? incoming.skills : base.skills,
-            certifications: Array.isArray(incoming.certifications)
-              ? incoming.certifications
-              : base.certifications,
-            education: Array.isArray(incoming.education) ? incoming.education : base.education,
-            experience: Array.isArray(incoming.experience) ? incoming.experience : base.experience,
-            projects: Array.isArray(incoming.projects) ? incoming.projects : base.projects,
-          })
+          // Merge with defaults so newly added fields exist on older resumes.
+          setData(mergeManualData(incoming))
         })
         .catch(() => setError('Failed to load resume'))
         .finally(() => setLoading(false))
     }
   }, [id, isEdit])
+
+  useEffect(() => {
+    if (isEdit || prefillAppliedRef.current) return
+    const state = (location.state || {}) as { prefillTitle?: string; prefillData?: Partial<ManualData> }
+    if (!state.prefillTitle && !state.prefillData) {
+      prefillAppliedRef.current = true
+      return
+    }
+    if (state.prefillTitle) setTitle(state.prefillTitle)
+    if (state.prefillData) setData(mergeManualData(state.prefillData))
+    prefillAppliedRef.current = true
+  }, [isEdit, location.state])
 
   const updatePersonal = (key: string, value: string) =>
     setData((d) => ({ ...d, personalInfo: { ...d.personalInfo, [key]: value } }))

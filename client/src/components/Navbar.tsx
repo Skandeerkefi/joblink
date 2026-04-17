@@ -42,7 +42,6 @@ export default function Navbar() {
       <NavLink to="/candidate/saved-jobs">Saved Jobs</NavLink>
       <NavLink to="/candidate/resumes">My Resumes</NavLink>
       <NavLink to="/candidate/ats-checker">ATS Checker</NavLink>
-      <NavLink to="/candidate/profile">Profile</NavLink>
     </>
   )
 

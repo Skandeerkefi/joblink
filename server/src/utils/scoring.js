@@ -1,7 +1,17 @@
-const normalize = (text) =>
+const normalizeText = (text) =>
   String(text || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/node\.js/g, 'nodejs')
+    .replace(/c\+\+/g, 'cpp')
+    .replace(/c#/g, 'csharp')
+    .replace(/\.net/g, ' dotnet ')
+    .replace(/[_/\\-]+/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ');
+
+const normalize = (text) =>
+  normalizeText(text)
     .split(/\s+/)
     .filter((w) => w.length > 1);
 
@@ -99,8 +109,15 @@ const calculateMatchScore = (resume, job) => {
   const resumeTextTokens = unique(normalize(buildResumeText(resume)));
   const resumeTokenSet = new Set(resumeTextTokens);
 
-  const jobSkills = (job.skills || []).map((s) => String(s).toLowerCase().trim()).filter(Boolean);
-  const jobSkillMatches = jobSkills.filter((s) => resumeTokenSet.has(s)).length;
+  const jobSkills = (job.skills || [])
+    .map((s) => unique(normalize(s)))
+    .filter((tokens) => tokens.length > 0);
+  const jobSkillMatches = jobSkills.reduce((matched, skillTokens) => {
+    const overlap = skillTokens.filter((token) => resumeTokenSet.has(token)).length;
+    const threshold =
+      skillTokens.length <= 2 ? 1 : Math.ceil(skillTokens.length * 0.6);
+    return matched + (overlap >= threshold ? 1 : 0);
+  }, 0);
   const skillScore = jobSkills.length
     ? (jobSkillMatches / jobSkills.length) * 70
     : 35;
@@ -111,8 +128,9 @@ const calculateMatchScore = (resume, job) => {
     ? Math.min(25, (keywordMatches / jobKeywordTokens.length) * 25)
     : 10;
 
+  const categoryTokens = normalize(String(job.category || '').replace(/_/g, ' '));
   const categoryBonus =
-    resumeTokenSet.has(String(job.category || '').toLowerCase().replace(/_/g, ' ')) ? 5 : 0;
+    categoryTokens.length > 0 && categoryTokens.every((token) => resumeTokenSet.has(token)) ? 5 : 0;
 
   const total = Math.round(Math.min(100, skillScore + keywordScore + categoryBonus));
 

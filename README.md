@@ -40,7 +40,7 @@ If SMTP is not configured, verification emails are logged as JSON payloads in se
 cd client
 npm install
 cp .env.example .env
-# Edit .env if needed (default API URL is /api)
+# Edit .env if needed (default API URL is https://joblink-production-00f1.up.railway.app/api)
 npm run dev
 ```
 

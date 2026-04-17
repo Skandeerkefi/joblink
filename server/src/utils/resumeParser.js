@@ -3,10 +3,14 @@ const path = require('path');
 const pdfParseModule = require('pdf-parse');
 const mammoth = require('mammoth');
 
-const pdfParse =
+const pdfParseFunction =
   (typeof pdfParseModule === 'function' && pdfParseModule) ||
   (typeof pdfParseModule?.default === 'function' && pdfParseModule.default) ||
   (typeof pdfParseModule?.pdfParse === 'function' && pdfParseModule.pdfParse);
+
+const PDFParseClass =
+  (typeof pdfParseModule?.PDFParse === 'function' && pdfParseModule.PDFParse) ||
+  (typeof pdfParseModule?.default?.PDFParse === 'function' && pdfParseModule.default.PDFParse);
 
 const cleanText = (text) =>
   String(text || '')
@@ -39,11 +43,26 @@ const resolveSafePath = (filePath, allowedDir) => {
 };
 
 const parsePdfBuffer = async (buffer) => {
-  if (typeof pdfParse !== 'function') {
-    throw new Error('PDF parser is unavailable');
+  if (typeof pdfParseFunction === 'function') {
+    const result = await pdfParseFunction(buffer);
+    const text = typeof result?.text === 'string' ? result.text : '';
+    return cleanText(text);
   }
-  const result = await pdfParse(buffer);
-  return cleanText(result.text);
+  if (typeof PDFParseClass === 'function') {
+    const parser = new PDFParseClass({ data: buffer });
+    try {
+      const result = await parser.getText();
+      const text = typeof result?.text === 'string' ? result.text : typeof result === 'string' ? result : '';
+      return cleanText(text);
+    } finally {
+      if (typeof parser.destroy === 'function') {
+        try {
+          await parser.destroy();
+        } catch (_) {}
+      }
+    }
+  }
+  throw new Error('pdf-parse module failed to load: no valid parser function found in module exports');
 };
 
 const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir }) => {

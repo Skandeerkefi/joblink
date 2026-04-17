@@ -1,7 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const pdfParseModule = require('pdf-parse');
 const mammoth = require('mammoth');
+
+const pdfParse =
+  (typeof pdfParseModule === 'function' && pdfParseModule) ||
+  (typeof pdfParseModule?.default === 'function' && pdfParseModule.default) ||
+  (typeof pdfParseModule?.pdfParse === 'function' && pdfParseModule.pdfParse);
 
 const cleanText = (text) =>
   String(text || '')
@@ -33,13 +38,20 @@ const resolveSafePath = (filePath, allowedDir) => {
   return resolvedFile;
 };
 
+const parsePdfBuffer = async (buffer) => {
+  if (typeof pdfParse !== 'function') {
+    throw new Error('PDF parser is unavailable');
+  }
+  const result = await pdfParse(buffer);
+  return cleanText(result.text);
+};
+
 const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir }) => {
   const safePath = resolveSafePath(filePath, allowedDir);
   const ext = getFileExtension(originalName || safePath);
   if (isPdf(mimeType, ext)) {
     const buffer = await fs.promises.readFile(safePath);
-    const result = await pdfParse(buffer);
-    return cleanText(result.text);
+    return parsePdfBuffer(buffer);
   }
   if (isDocx(mimeType, ext)) {
     const result = await mammoth.extractRawText({ path: safePath });
@@ -57,8 +69,7 @@ const parseResumeBuffer = async ({ buffer, mimeType, originalName }) => {
   }
   const ext = getFileExtension(originalName);
   if (isPdf(mimeType, ext)) {
-    const result = await pdfParse(buffer);
-    return cleanText(result.text);
+    return parsePdfBuffer(buffer);
   }
   if (isDocx(mimeType, ext)) {
     const result = await mammoth.extractRawText({ buffer });

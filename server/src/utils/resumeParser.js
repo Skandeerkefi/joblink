@@ -1,7 +1,20 @@
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const pdfParseModule = require('pdf-parse');
 const mammoth = require('mammoth');
+
+const pickFunction = (candidates) => candidates.find((candidate) => typeof candidate === 'function');
+
+const pdfParseFunction = pickFunction([
+  pdfParseModule,
+  pdfParseModule?.default,
+  pdfParseModule?.pdfParse,
+]);
+
+const PDFParseConstructor = pickFunction([
+  pdfParseModule?.PDFParse,
+  pdfParseModule?.default?.PDFParse,
+]);
 
 const cleanText = (text) =>
   String(text || '')
@@ -33,13 +46,33 @@ const resolveSafePath = (filePath, allowedDir) => {
   return resolvedFile;
 };
 
+const parsePdfBuffer = async (buffer) => {
+  if (typeof pdfParseFunction === 'function') {
+    const result = await pdfParseFunction(buffer);
+    const text = typeof result?.text === 'string' ? result.text : '';
+    return cleanText(text);
+  }
+  if (typeof PDFParseConstructor === 'function') {
+    const parser = new PDFParseConstructor({ data: buffer });
+    try {
+      const result = await parser.getText();
+      const text = typeof result?.text === 'string' ? result.text : typeof result === 'string' ? result : '';
+      return cleanText(text);
+    } finally {
+      if (typeof parser.destroy === 'function') {
+        await parser.destroy();
+      }
+    }
+  }
+  throw new Error('pdf-parse module failed to load: no valid parser function found in module exports');
+};
+
 const parseResumeFile = async ({ filePath, mimeType, originalName, allowedDir }) => {
   const safePath = resolveSafePath(filePath, allowedDir);
   const ext = getFileExtension(originalName || safePath);
   if (isPdf(mimeType, ext)) {
     const buffer = await fs.promises.readFile(safePath);
-    const result = await pdfParse(buffer);
-    return cleanText(result.text);
+    return parsePdfBuffer(buffer);
   }
   if (isDocx(mimeType, ext)) {
     const result = await mammoth.extractRawText({ path: safePath });
@@ -57,8 +90,7 @@ const parseResumeBuffer = async ({ buffer, mimeType, originalName }) => {
   }
   const ext = getFileExtension(originalName);
   if (isPdf(mimeType, ext)) {
-    const result = await pdfParse(buffer);
-    return cleanText(result.text);
+    return parsePdfBuffer(buffer);
   }
   if (isDocx(mimeType, ext)) {
     const result = await mammoth.extractRawText({ buffer });

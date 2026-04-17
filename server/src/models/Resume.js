@@ -26,6 +26,14 @@ const projectSchema = new mongoose.Schema({
   bullets: [{ type: String }],
 }, { _id: false });
 
+const certificationSchema = new mongoose.Schema({
+  name: { type: String },
+  issuer: { type: String },
+  issueDate: { type: String },
+  credentialId: { type: String },
+  link: { type: String },
+}, { _id: false });
+
 const personalInfoSchema = new mongoose.Schema({
   fullName: { type: String },
   email: { type: String },
@@ -38,6 +46,7 @@ const manualDataSchema = new mongoose.Schema({
   personalInfo: { type: personalInfoSchema, default: () => ({}) },
   summary: { type: String },
   skills: [{ type: String }],
+  certifications: [certificationSchema],
   education: [educationSchema],
   experience: [experienceSchema],
   projects: [projectSchema],

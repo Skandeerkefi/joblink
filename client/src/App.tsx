@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/auth/Login'
@@ -14,18 +15,21 @@ import ManualResumeEditor from './pages/candidate/ManualResumeEditor'
 import CandidateDashboard from './pages/candidate/CandidateDashboard'
 import CandidateProfile from './pages/candidate/CandidateProfile'
 import SavedJobs from './pages/candidate/SavedJobs'
+import AtsChecker from './pages/candidate/AtsChecker'
 import RecruiterJobs from './pages/recruiter/RecruiterJobs'
 import JobForm from './pages/recruiter/JobForm'
 import RecruiterApplications from './pages/recruiter/RecruiterApplications'
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard'
+import AdminUsers from './pages/admin/AdminUsers'
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-black text-gray-100">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100">
+          <Navbar />
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -71,6 +75,14 @@ function App() {
               element={
                 <ProtectedRoute role="candidate">
                   <MyResumes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidate/ats-checker"
+              element={
+                <ProtectedRoute role="candidate">
+                  <AtsChecker />
                 </ProtectedRoute>
               }
             />
@@ -133,12 +145,23 @@ function App() {
               }
             />
 
+            {/* Admin routes */}
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminUsers />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </AuthProvider>
+            </Routes>
+          </main>
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

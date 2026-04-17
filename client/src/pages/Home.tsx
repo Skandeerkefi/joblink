@@ -68,7 +68,7 @@ export default function Home() {
               My Dashboard
             </Link>
           </div>
-        ) : (
+        ) : user.role === 'recruiter' ? (
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               to="/recruiter/jobs/new"
@@ -81,6 +81,21 @@ export default function Home() {
               className="border-2 border-white text-white font-semibold px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors"
             >
               My Dashboard
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              to="/admin/users"
+              className="bg-white text-blue-700 font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow"
+            >
+              Admin Panel
+            </Link>
+            <Link
+              to="/jobs"
+              className="border-2 border-white text-white font-semibold px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              Browse Jobs
             </Link>
           </div>
         )}

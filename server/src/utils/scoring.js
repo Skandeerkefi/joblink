@@ -33,6 +33,9 @@ const DEFAULT_KEYWORD_SCORE = 10;
 const CATEGORY_BONUS_POINTS = 5;
 const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
 const SINGLE_TOKEN_MATCH_LIMIT = 2;
+const CONTACT_FIELD_MAX_SCORE = 20;
+const CONTACT_FIELDS_COUNT = 3; // fullName, email, phone
+const CONTACT_FIELD_WEIGHT = CONTACT_FIELD_MAX_SCORE / CONTACT_FIELDS_COUNT;
 
 const buildResumeText = (resume) => {
   if (!resume) return '';
@@ -49,6 +52,9 @@ const buildResumeText = (resume) => {
     const projects = (m.projects || [])
       .map((p) => [p.name, p.description, ...(p.bullets || [])].filter(Boolean).join(' '))
       .join(' ');
+    const certifications = (m.certifications || [])
+      .map((c) => [c.name, c.issuer, c.issueDate, c.credentialId, c.link].filter(Boolean).join(' '))
+      .join(' ');
 
     return [
       resume.title,
@@ -57,6 +63,7 @@ const buildResumeText = (resume) => {
       personal.location,
       m.summary,
       ...(m.skills || []),
+      certifications,
       education,
       experience,
       projects,
@@ -89,21 +96,29 @@ const calculateAtsScore = (resume) => {
   const experience = m.experience || [];
   const education = m.education || [];
   const projects = m.projects || [];
+  const certifications = m.certifications || [];
   const totalBulletsCount =
     experience.reduce((sum, e) => sum + (e.bullets || []).length, 0) +
     projects.reduce((sum, p) => sum + (p.bullets || []).length, 0);
 
-  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * 8.33;
+  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * CONTACT_FIELD_WEIGHT;
   const summaryScore = Math.min(15, Math.max(0, String(m.summary || '').trim().length / 12));
   const skillsScore = Math.min(20, skills.length * 2.5);
   const experienceScore = Math.min(20, experience.length * 6 + Math.min(5, totalBulletsCount * 0.5));
   const educationScore = Math.min(10, education.length * 5);
   const projectsScore = Math.min(10, projects.length * 3.5 + Math.min(3, totalBulletsCount * 0.3));
+  const certificationsScore = Math.min(5, certifications.length * 2);
 
   const total = Math.round(
     Math.min(
       100,
-      contactScore + summaryScore + skillsScore + experienceScore + educationScore + projectsScore
+      contactScore +
+        summaryScore +
+        skillsScore +
+        experienceScore +
+        educationScore +
+        projectsScore +
+        certificationsScore
     )
   );
 
@@ -116,6 +131,7 @@ const calculateAtsScore = (resume) => {
       experience: Math.round(experienceScore),
       education: Math.round(educationScore),
       projects: Math.round(projectsScore),
+      certifications: Math.round(certificationsScore),
     },
   };
 };

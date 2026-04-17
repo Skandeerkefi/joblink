@@ -12,6 +12,11 @@ const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+const safeErrorMetadata = (error) => ({
+  name: error?.name || 'Error',
+  code: error?.code || 'UNKNOWN',
+});
+
 const getClientUrl = (req) => {
   const configuredOrigins = process.env.CLIENT_URL
     ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
@@ -59,11 +64,25 @@ router.post(
 
       const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
-      await sendVerificationEmail({
-        email: user.email,
-        name: user.name,
-        verificationUrl,
-      });
+      try {
+        await sendVerificationEmail({
+          email: user.email,
+          name: user.name,
+          verificationUrl,
+        });
+      } catch (emailError) {
+        console.error('Verification email send failed during registration:', safeErrorMetadata(emailError));
+        await User.deleteOne({ _id: user._id }).catch((cleanupError) => {
+          console.error(
+            'CRITICAL: Failed to roll back newly created account after registration email failure. Manual cleanup may be required.',
+            safeErrorMetadata(cleanupError)
+          );
+        });
+        return res.status(503).json({
+          success: false,
+          message: 'Registration is temporarily unavailable because verification email could not be sent. Please try again later.',
+        });
+      }
 
       const response = {
         success: true,
@@ -168,11 +187,19 @@ router.post(
 
       const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
-      await sendVerificationEmail({
-        email: user.email,
-        name: user.name,
-        verificationUrl,
-      });
+      try {
+        await sendVerificationEmail({
+          email: user.email,
+          name: user.name,
+          verificationUrl,
+        });
+      } catch (emailError) {
+        console.error('Verification email resend failed:', safeErrorMetadata(emailError));
+        return res.status(503).json({
+          success: false,
+          message: 'Verification email service is temporarily unavailable. Please try again later.',
+        });
+      }
 
       const response = { success: true, message: 'Verification email sent.' };
       if (process.env.NODE_ENV !== 'production') {

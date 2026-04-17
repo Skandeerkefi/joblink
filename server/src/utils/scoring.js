@@ -98,13 +98,13 @@ const calculateAtsScore = (resume) => {
     experience.reduce((sum, e) => sum + (e.bullets || []).length, 0) +
     projects.reduce((sum, p) => sum + (p.bullets || []).length, 0);
 
-  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * 8.33;
+  const contactScore = [personal.fullName, personal.email, personal.phone].filter(Boolean).length * 6.67;
   const summaryScore = Math.min(15, Math.max(0, String(m.summary || '').trim().length / 12));
   const skillsScore = Math.min(20, skills.length * 2.5);
   const experienceScore = Math.min(20, experience.length * 6 + Math.min(5, totalBulletsCount * 0.5));
   const educationScore = Math.min(10, education.length * 5);
   const projectsScore = Math.min(10, projects.length * 3.5 + Math.min(3, totalBulletsCount * 0.3));
-  const certificationsScore = Math.min(10, certifications.length * 4);
+  const certificationsScore = Math.min(5, certifications.length * 2);
 
   const total = Math.round(
     Math.min(

@@ -25,12 +25,15 @@ Server runs at http://localhost:5000
 
 To send real verification emails, configure these server env vars:
 
-- `SMTP_HOST`
-- `SMTP_PORT` (default `587`)
-- `SMTP_SECURE` (`true`/`false`)
-- `SMTP_USER`
-- `SMTP_PASS`
-- `SMTP_FROM`
+- `SMTP_HOST` (SMTP server host, e.g. `smtp.gmail.com`)
+- `SMTP_PORT` (usually `587` for STARTTLS or `465` for SSL/TLS)
+- `SMTP_SECURE` (`false` for `587`, `true` for `465`)
+- `SMTP_USER` (SMTP username/login)
+- `SMTP_PASS` (SMTP password/app-password)
+- `SMTP_FROM` (sender email shown to users)
+- `SMTP_CONNECTION_TIMEOUT_MS` (default `15000`)
+- `SMTP_GREETING_TIMEOUT_MS` (default `10000`)
+- `SMTP_SOCKET_TIMEOUT_MS` (default `20000`)
 
 If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
 

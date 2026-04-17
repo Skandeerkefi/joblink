@@ -107,58 +107,58 @@ export default function JobForm() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
         {isEdit ? 'Edit Job' : 'Post New Job'}
       </h1>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 p-8">
+      <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Title *</label>
             <input
               type="text"
               name="title"
               value={form.title}
               onChange={handleChange}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. Senior Software Engineer"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
               required
               rows={6}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Describe the role, responsibilities, and requirements..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
             <input
               type="text"
               name="location"
               value={form.location}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. San Francisco, CA or Remote"
             />
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
               <input
                 type="checkbox"
                 name="remote"
@@ -172,13 +172,13 @@ export default function JobForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Job Type *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Type *</label>
               <select
                 name="jobType"
                 value={form.jobType}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {JOB_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -189,13 +189,13 @@ export default function JobForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
               <select
                 name="category"
                 value={form.category}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>
@@ -207,7 +207,7 @@ export default function JobForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Skills (comma separated)
             </label>
             <input
@@ -215,7 +215,7 @@ export default function JobForm() {
               name="skills"
               value={form.skills}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. React, Node.js, MongoDB"
             />
           </div>
@@ -224,7 +224,7 @@ export default function JobForm() {
             <button
               type="button"
               onClick={() => navigate('/recruiter/jobs')}
-              className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+              className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 font-medium"
             >
               Cancel
             </button>

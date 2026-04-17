@@ -133,37 +133,37 @@ export default function CandidateProfile() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">My Profile</h1>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg mb-6">
           {success}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Bio */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">About Me</h2>
+        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">About Me</h2>
           <textarea
             value={profile.bio}
             onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
             rows={4}
             maxLength={1000}
             placeholder="Write a short bio about yourself..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <p className="text-xs text-gray-400 mt-1">{profile.bio.length}/1000</p>
         </div>
 
         {/* Skills */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Skills</h2>
+        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skills</h2>
           <div className="flex gap-2 mb-3">
             <input
               type="text"
@@ -171,7 +171,7 @@ export default function CandidateProfile() {
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={handleSkillKeyDown}
               placeholder="Type a skill and press Enter or comma"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <button
               type="button"
@@ -204,9 +204,9 @@ export default function CandidateProfile() {
         </div>
 
         {/* Education */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Education</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Education</h2>
             <button
               type="button"
               onClick={addEducation}
@@ -222,7 +222,7 @@ export default function CandidateProfile() {
 
           <div className="space-y-4">
             {profile.education.map((edu, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-lg p-4 relative">
+              <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 relative">
                 <button
                   type="button"
                   onClick={() => removeEducation(idx)}
@@ -233,37 +233,37 @@ export default function CandidateProfile() {
                 </button>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">School / University *</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">School / University *</label>
                     <input
                       type="text"
                       value={edu.school}
                       onChange={(e) => updateEdu(idx, 'school', e.target.value)}
                       placeholder="e.g. MIT"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Degree</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Degree</label>
                     <input
                       type="text"
                       value={edu.degree}
                       onChange={(e) => updateEdu(idx, 'degree', e.target.value)}
                       placeholder="e.g. Bachelor's"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Field of Study</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Field of Study</label>
                     <input
                       type="text"
                       value={edu.field}
                       onChange={(e) => updateEdu(idx, 'field', e.target.value)}
                       placeholder="e.g. Computer Science"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Start Year</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Start Year</label>
                     <input
                       type="number"
                       value={edu.startYear}
@@ -271,11 +271,11 @@ export default function CandidateProfile() {
                       placeholder="e.g. 2018"
                       min={1900}
                       max={2100}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">End Year</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">End Year</label>
                     <input
                       type="number"
                       value={edu.endYear}
@@ -283,7 +283,7 @@ export default function CandidateProfile() {
                       placeholder="e.g. 2022"
                       min={1900}
                       max={2100}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                 </div>

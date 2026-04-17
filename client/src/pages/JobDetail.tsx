@@ -203,12 +203,12 @@ export default function JobDetail() {
         ← Back to Jobs
       </button>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-8">
+      <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8">
         <div className="mb-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
-              <p className="text-gray-500 text-lg mb-4">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{job.title}</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">
                 {job.recruiter?.name}
                 {job.location && ` • ${job.location}`}
                 {job.remote && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-100 text-green-700">Remote</span>}
@@ -241,13 +241,13 @@ export default function JobDetail() {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Job Description</h2>
-          <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{job.description}</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Job Description</h2>
+          <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{job.description}</p>
         </div>
 
         {job.skills.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Required Skills</h2>
             <div className="flex flex-wrap gap-2">
               {job.skills.map((skill) => (
                 <span
@@ -267,29 +267,29 @@ export default function JobDetail() {
 
         {/* Apply section */}
         {user?.role === 'candidate' && (
-          <div className="border-t border-gray-200 pt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Apply for this Position</h2>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Apply for this Position</h2>
 
             {success && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg mb-4">
                 {success}
               </div>
             )}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
                 {error}
               </div>
             )}
 
             {resumes.length > 0 && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Attach Resume (optional)
                 </label>
                 <select
                   value={selectedResume}
                   onChange={(e) => setSelectedResume(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="">No resume selected</option>
                     {resumes.map((r) => (
@@ -302,29 +302,29 @@ export default function JobDetail() {
             )}
 
             {selectedResume && (
-              <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                 {analysisLoading ? (
-                  <p className="text-sm text-gray-500">Calculating ATS and match score...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Calculating ATS and match score...</p>
                 ) : analysis ? (
-                  <div className="text-sm text-gray-700 space-y-1">
+                  <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
                     <p><span className="font-semibold">ATS score:</span> {analysis.atsScore}/100</p>
                     <p><span className="font-semibold">Job match score:</span> {analysis.matchScore ?? 0}/100</p>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">Unable to analyze this resume right now.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Unable to analyze this resume right now.</p>
                 )}
               </div>
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Cover Letter (optional)
               </label>
               <textarea
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
                 rows={4}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Tell them why you're a great fit..."
               />
             </div>
@@ -340,9 +340,9 @@ export default function JobDetail() {
         )}
 
         {!user && (
-          <div className="border-t border-gray-200 pt-6">
-            <p className="text-gray-600">
-              <a href="/login" className="text-blue-600 hover:underline font-medium">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <p className="text-gray-600 dark:text-gray-300">
+              <a href="/login" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 Sign in
               </a>{' '}
               to apply for this position.
@@ -354,7 +354,7 @@ export default function JobDetail() {
       {/* Similar jobs */}
       {similarJobs.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Similar Jobs</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Similar Jobs</h2>
           <div className="grid gap-3">
             {similarJobs.map((sj) => (
               <Link

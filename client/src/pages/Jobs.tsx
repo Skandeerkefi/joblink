@@ -172,33 +172,33 @@ export default function Jobs() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Your Next Job</h1>
-        <p className="text-gray-500">Browse opportunities from top companies</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Find Your Next Job</h1>
+        <p className="text-gray-500 dark:text-gray-400">Browse opportunities from top companies</p>
       </div>
 
       {/* Search + filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-6">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-3">
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search jobs by title or description..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <input
             type="text"
             value={locationInput}
             onChange={(e) => setLocationInput(e.target.value)}
             placeholder="Location..."
-            className="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full sm:w-40 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <input
             type="text"
             value={skillsInput}
             onChange={(e) => setSkillsInput(e.target.value)}
             placeholder="Skills (e.g. React, Node)"
-            className="w-full sm:w-48 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full sm:w-48 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <button
             type="submit"
@@ -212,7 +212,7 @@ export default function Jobs() {
           <select
             value={selectedCategory}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="">All Categories</option>
             {CATEGORIES.map((cat) => (
@@ -225,7 +225,7 @@ export default function Jobs() {
           <select
             value={selectedJobType}
             onChange={(e) => { setSelectedJobType(e.target.value); setPage(1) }}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="">All Types</option>
             {JOB_TYPES.map((t) => (
@@ -233,7 +233,7 @@ export default function Jobs() {
             ))}
           </select>
 
-          <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={remoteOnly}
@@ -246,7 +246,7 @@ export default function Jobs() {
           <select
             value={sort}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>

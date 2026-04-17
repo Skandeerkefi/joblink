@@ -12,10 +12,10 @@ router.use(protect, authorize('admin'));
 router.get('/users', async (req, res, next) => {
   try {
     const role = String(req.query.role || 'all');
-    const filter = role === 'all' ? { role: { $in: ['candidate', 'recruiter'] } } : { role };
     if (!['all', 'candidate', 'recruiter'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role filter' });
     }
+    const filter = role === 'all' ? { role: { $in: ['candidate', 'recruiter'] } } : { role };
 
     const users = await User.find(filter).select('name email role emailVerified createdAt').sort({ createdAt: -1 });
     res.json({ success: true, users });

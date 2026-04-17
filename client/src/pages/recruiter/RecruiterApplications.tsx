@@ -7,7 +7,36 @@ interface ResumeManualData {
   personalInfo?: { fullName?: string; email?: string }
   summary?: string
   skills?: string[]
-  experience?: Array<{ title?: string; company?: string }>
+  experience?: Array<{
+    title?: string
+    company?: string
+    location?: string
+    startDate?: string
+    endDate?: string
+    current?: boolean
+    bullets?: string[]
+  }>
+  education?: Array<{
+    school?: string
+    degree?: string
+    field?: string
+    startYear?: string
+    endYear?: string
+    details?: string
+  }>
+  projects?: Array<{
+    name?: string
+    link?: string
+    description?: string
+    bullets?: string[]
+  }>
+  certifications?: Array<{
+    name?: string
+    issuer?: string
+    issueDate?: string
+    credentialId?: string
+    link?: string
+  }>
 }
 
 interface Application {
@@ -113,6 +142,7 @@ export default function RecruiterApplications() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedManualApplication, setSelectedManualApplication] = useState<Application | null>(null)
 
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [minAts, setMinAts] = useState('')
@@ -176,6 +206,19 @@ export default function RecruiterApplications() {
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const formatExperienceDates = (
+    startDate?: string,
+    endDate?: string,
+    current?: boolean
+  ) => {
+    if (!startDate && !endDate && !current) return ''
+    if (!startDate && current) return 'Present'
+    if (!startDate) return endDate || ''
+    if (current) return `${startDate} - Present`
+    if (!endDate) return startDate
+    return `${startDate} - ${endDate}`
   }
 
   if (loading) {
@@ -348,6 +391,13 @@ export default function RecruiterApplications() {
                                 <div className="text-gray-500">
                                   Skills: {manualSkillsCount} • Experience: {manualExperienceCount}
                                 </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedManualApplication(app)}
+                                  className="mt-2 text-blue-600 hover:underline"
+                                >
+                                  View CV
+                                </button>
                               </div>
                             ) : (
                               <span className="text-sm text-gray-500">—</span>
@@ -399,6 +449,15 @@ export default function RecruiterApplications() {
                         ) : app.resume?.type === 'MANUAL' ? (
                           <div className="text-xs text-gray-500">
                             {app.resume.title || 'Manual CV'} • Skills: {app.resume.manualData?.skills?.length || 0}
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedManualApplication(app)}
+                                className="mt-1 text-sm text-blue-600 hover:underline"
+                              >
+                                View CV
+                              </button>
+                            </div>
                           </div>
                         ) : null}
                       </div>
@@ -423,6 +482,169 @@ export default function RecruiterApplications() {
               </div>
             </section>
           ))}
+        </div>
+      )}
+
+      {selectedManualApplication?.resume?.type === 'MANUAL' && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-950 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="sticky top-0 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {selectedManualApplication.resume.title || 'Manual CV'}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {selectedManualApplication.candidate?.name} • {selectedManualApplication.candidate?.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedManualApplication(null)}
+                className="text-sm border border-gray-300 dark:border-gray-700 rounded px-3 py-1 hover:bg-gray-50 dark:hover:bg-gray-900"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-4 space-y-5 text-sm">
+              <section>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Personal Info</h4>
+                <div className="text-gray-700 dark:text-gray-300 space-y-1">
+                  <div>
+                    {selectedManualApplication.resume.manualData?.personalInfo?.fullName || 'No full name provided'}
+                  </div>
+                  {selectedManualApplication.resume.manualData?.personalInfo?.email && (
+                    <div>{selectedManualApplication.resume.manualData.personalInfo.email}</div>
+                  )}
+                </div>
+              </section>
+
+              {selectedManualApplication.resume.manualData?.summary && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Summary</h4>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {selectedManualApplication.resume.manualData.summary}
+                  </p>
+                </section>
+              )}
+
+              {(selectedManualApplication.resume.manualData?.skills || []).length > 0 && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Skills</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedManualApplication.resume.manualData?.skills || []).map((skill, index) => (
+                      <span
+                        key={`${skill}-${index}`}
+                        className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(selectedManualApplication.resume.manualData?.experience || []).length > 0 && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Experience</h4>
+                  <div className="space-y-3">
+                    {(selectedManualApplication.resume.manualData?.experience || []).map((exp, index) => (
+                      <div key={`${exp.title || 'exp'}-${index}`} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {exp.title || 'Role'}{exp.company ? ` — ${exp.company}` : ''}
+                        </div>
+                        {(exp.location || exp.startDate || exp.endDate || exp.current) && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {[exp.location, formatExperienceDates(exp.startDate, exp.endDate, exp.current)].filter(Boolean).join(' • ')}
+                          </div>
+                        )}
+                        {(exp.bullets || []).filter(Boolean).length > 0 && (
+                          <ul className="list-disc pl-5 mt-2 text-gray-700 dark:text-gray-300 space-y-1">
+                            {(exp.bullets || []).filter(Boolean).map((bullet, bulletIndex) => (
+                              <li key={`${bulletIndex}-${bullet}`}>{bullet}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(selectedManualApplication.resume.manualData?.education || []).length > 0 && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Education</h4>
+                  <div className="space-y-3">
+                    {(selectedManualApplication.resume.manualData?.education || []).map((edu, index) => (
+                      <div key={`${edu.school || 'edu'}-${index}`} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {edu.degree || 'Degree'}{edu.field ? ` in ${edu.field}` : ''}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {[edu.school, [edu.startYear, edu.endYear].filter(Boolean).join(' - ')].filter(Boolean).join(' • ')}
+                        </div>
+                        {edu.details && (
+                          <p className="mt-2 text-gray-700 dark:text-gray-300">{edu.details}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(selectedManualApplication.resume.manualData?.projects || []).length > 0 && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Projects</h4>
+                  <div className="space-y-3">
+                    {(selectedManualApplication.resume.manualData?.projects || []).map((project, index) => (
+                      <div key={`${project.name || 'project'}-${index}`} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{project.name || 'Project'}</div>
+                        {project.description && (
+                          <p className="mt-1 text-gray-700 dark:text-gray-300">{project.description}</p>
+                        )}
+                        {project.link && (
+                          <a
+                            href={project.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-block text-blue-600 hover:underline"
+                          >
+                            {project.link}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(selectedManualApplication.resume.manualData?.certifications || []).length > 0 && (
+                <section>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Certifications</h4>
+                  <div className="space-y-3">
+                    {(selectedManualApplication.resume.manualData?.certifications || []).map((cert, index) => (
+                      <div key={`${cert.name || 'cert'}-${index}`} className="border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{cert.name || 'Certification'}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {[cert.issuer, cert.issueDate, cert.credentialId ? `ID: ${cert.credentialId}` : ''].filter(Boolean).join(' • ')}
+                        </div>
+                        {cert.link && (
+                          <a
+                            href={cert.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-block text-blue-600 hover:underline"
+                          >
+                            {cert.link}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

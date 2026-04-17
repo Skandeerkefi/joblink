@@ -66,9 +66,9 @@ router.post(
           verificationUrl,
         });
       } catch (emailError) {
-        console.error(`Verification email send failed during registration for ${user.email}:`, emailError.message || emailError);
+        console.error(`Verification email send failed during registration for user ${user._id}:`, emailError.message || emailError);
         await User.deleteOne({ _id: user._id }).catch((cleanupError) => {
-          console.error(`Failed to roll back user after email failure for ${user.email}:`, cleanupError.message || cleanupError);
+          console.error(`Failed to roll back user after email failure (user ${user._id}):`, cleanupError.message || cleanupError);
         });
         return res.status(503).json({
           success: false,
@@ -186,7 +186,7 @@ router.post(
           verificationUrl,
         });
       } catch (emailError) {
-        console.error(`Verification email resend failed for ${user.email}:`, emailError.message || emailError);
+        console.error(`Verification email resend failed for user ${user._id}:`, emailError.message || emailError);
         return res.status(503).json({
           success: false,
           message: 'Verification email service is temporarily unavailable. Please try again later.',

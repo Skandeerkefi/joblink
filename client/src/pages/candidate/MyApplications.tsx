@@ -17,6 +17,8 @@ interface Application {
   }
   status: string
   coverLetter?: string
+  atsScore?: number
+  matchScore?: number
   createdAt: string
 }
 
@@ -85,6 +87,8 @@ export default function MyApplications() {
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Location</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Resume</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Applied</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">ATS</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Match</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Status</th>
               </tr>
             </thead>
@@ -117,6 +121,8 @@ export default function MyApplications() {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(app.createdAt).toLocaleDateString()}
                   </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{app.atsScore ?? '—'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{app.matchScore ?? '—'}</td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[app.status] || 'bg-gray-100 text-gray-700'}`}

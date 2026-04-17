@@ -15,11 +15,24 @@ A full-stack job platform built with the MERN stack (MongoDB, Express, React, No
 cd server
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI and JWT secret
+# Edit .env with your MongoDB URI, JWT secret and optional SMTP credentials for email verification
 npm run dev
 ```
 
 Server runs at http://localhost:5000
+
+### Email verification (optional SMTP config)
+
+To send real verification emails, configure these server env vars:
+
+- `SMTP_HOST`
+- `SMTP_PORT` (default `587`)
+- `SMTP_SECURE` (`true`/`false`)
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+
+If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
 
 ### Client
 

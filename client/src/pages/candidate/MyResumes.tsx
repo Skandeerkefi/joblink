@@ -14,6 +14,8 @@ export default function MyResumes() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [atsByResume, setAtsByResume] = useState<Record<string, number>>({})
+  const [checkingAtsId, setCheckingAtsId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -70,6 +72,18 @@ export default function MyResumes() {
     const kb = bytes / 1024
     if (kb < 1024) return `${kb.toFixed(1)} KB`
     return `${(kb / 1024).toFixed(1)} MB`
+  }
+
+  const handleCheckAts = async (resumeId: string) => {
+    setCheckingAtsId(resumeId)
+    try {
+      const res = await api.get(`/resumes/${resumeId}/analysis`)
+      setAtsByResume((prev) => ({ ...prev, [resumeId]: res.data.analysis.atsScore }))
+    } catch {
+      setError('Failed to calculate ATS score')
+    } finally {
+      setCheckingAtsId(null)
+    }
   }
 
   return (
@@ -144,6 +158,7 @@ export default function MyResumes() {
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Name</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Type</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Size / Info</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">ATS Score</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Date</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Actions</th>
               </tr>
@@ -180,10 +195,20 @@ export default function MyResumes() {
                     {resume.type === 'UPLOAD' ? formatFileSize(resume.fileSize ?? 0) : 'Structured data'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
+                    {atsByResume[resume._id] !== undefined ? `${atsByResume[resume._id]}/100` : '—'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(resume.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleCheckAts(resume._id)}
+                        className="text-cyan-600 hover:text-cyan-800 text-sm font-medium"
+                        disabled={checkingAtsId === resume._id}
+                      >
+                        {checkingAtsId === resume._id ? 'Checking...' : 'ATS Check'}
+                      </button>
                       {resume.type === 'MANUAL' && (
                         <>
                           <button

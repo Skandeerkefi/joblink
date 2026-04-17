@@ -10,6 +10,7 @@ const jobSchema = new mongoose.Schema({
     enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'REMOTE'],
     default: 'FULL_TIME',
   },
+  remote: { type: Boolean, default: false },
   category: {
     type: String,
     required: true,
@@ -23,5 +24,14 @@ const jobSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
+
+// Text index for full-text search on title and description
+jobSchema.index({ title: 'text', description: 'text' });
+// Indexes for filtering
+jobSchema.index({ category: 1 });
+jobSchema.index({ location: 1 });
+jobSchema.index({ jobType: 1 });
+jobSchema.index({ remote: 1 });
+jobSchema.index({ isActive: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Job', jobSchema);

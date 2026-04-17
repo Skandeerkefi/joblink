@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Resume = require('../models/Resume');
+const Job = require('../models/Job');
 const { protect, authorize } = require('../middleware/auth');
+const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -93,6 +96,44 @@ router.get('/:id', protect, authorize('candidate'), async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
     res.json({ success: true, resume });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/resumes/:id/analysis?jobId=...
+router.get('/:id/analysis', protect, authorize('candidate'), async (req, res, next) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(String(req.params.id))) {
+      return res.status(400).json({ success: false, message: 'Invalid resume id' });
+    }
+    const resumeObjectId = new mongoose.Types.ObjectId(String(req.params.id));
+    const resume = await Resume.findById(resumeObjectId);
+    if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
+    if (resume.candidate.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const ats = calculateAtsScore(resume);
+    let match = null;
+    if (req.query.jobId) {
+      if (!mongoose.Types.ObjectId.isValid(String(req.query.jobId))) {
+        return res.status(400).json({ success: false, message: 'Invalid job id' });
+      }
+      const jobObjectId = new mongoose.Types.ObjectId(String(req.query.jobId));
+      const job = await Job.findById(jobObjectId);
+      if (job) match = calculateMatchScore(resume, job);
+    }
+
+    res.json({
+      success: true,
+      analysis: {
+        atsScore: ats.score,
+        atsBreakdown: ats.breakdown,
+        matchScore: match ? match.score : null,
+        matchBreakdown: match ? match.breakdown : null,
+      },
+    });
   } catch (err) {
     next(err);
   }

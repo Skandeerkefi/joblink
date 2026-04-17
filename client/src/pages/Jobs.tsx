@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
-import { CATEGORIES } from '../constants/categories'
+import { CATEGORIES, JOB_TYPES } from '../constants/categories'
+import { useAuth } from '../context/AuthContext'
 
 interface Job {
   _id: string
@@ -9,6 +10,7 @@ interface Job {
   description: string
   location: string
   jobType: string
+  remote: boolean
   category: string
   skills: string[]
   recruiter: { _id: string; name: string }
@@ -34,12 +36,25 @@ const categoryColors: Record<string, string> = {
 const LIMIT = 10
 
 export default function Jobs() {
+  const { user } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
+  const [savingId, setSavingId] = useState<string | null>(null)
+
+  // Filter state
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedJobType, setSelectedJobType] = useState('')
+  const [locationInput, setLocationInput] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
+  const [skillsInput, setSkillsInput] = useState('')
+  const [skillsQuery, setSkillsQuery] = useState('')
+  const [remoteOnly, setRemoteOnly] = useState(false)
+  const [sort, setSort] = useState('newest')
+
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [pages, setPages] = useState(1)
@@ -47,9 +62,14 @@ export default function Jobs() {
   const fetchJobs = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string | number> = { page, limit: LIMIT }
+      const params: Record<string, string | number | boolean> = { page, limit: LIMIT }
       if (selectedCategory) params.category = selectedCategory
       if (searchQuery) params.q = searchQuery
+      if (selectedJobType) params.jobType = selectedJobType
+      if (locationQuery) params.location = locationQuery
+      if (skillsQuery) params.skills = skillsQuery
+      if (remoteOnly) params.remote = true
+      if (sort) params.sort = sort
       const res = await api.get('/jobs', { params })
       setJobs(res.data.data)
       setTotal(res.data.total)
@@ -59,16 +79,29 @@ export default function Jobs() {
     } finally {
       setLoading(false)
     }
-  }, [selectedCategory, searchQuery, page])
+  }, [selectedCategory, searchQuery, selectedJobType, locationQuery, skillsQuery, remoteOnly, sort, page])
 
   useEffect(() => {
     fetchJobs()
   }, [fetchJobs])
 
+  // Fetch saved jobs for candidates to show save state
+  useEffect(() => {
+    if (user?.role !== 'candidate') return
+    api.get('/saved-jobs/mine', { params: { limit: 100 } })
+      .then((res) => {
+        const ids = new Set<string>(res.data.data.map((s: { job: { _id: string } }) => s.job._id))
+        setSavedJobIds(ids)
+      })
+      .catch(() => {})
+  }, [user])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setPage(1)
     setSearchQuery(searchInput)
+    setLocationQuery(locationInput)
+    setSkillsQuery(skillsInput)
   }
 
   const handleCategoryChange = (value: string) => {
@@ -76,11 +109,46 @@ export default function Jobs() {
     setPage(1)
   }
 
+  const handleSortChange = (value: string) => {
+    setSort(value)
+    setPage(1)
+  }
+
   const handleClearFilters = () => {
     setSelectedCategory('')
     setSearchInput('')
     setSearchQuery('')
+    setLocationInput('')
+    setLocationQuery('')
+    setSkillsInput('')
+    setSkillsQuery('')
+    setSelectedJobType('')
+    setRemoteOnly(false)
+    setSort('newest')
     setPage(1)
+  }
+
+  const handleSaveToggle = async (e: React.MouseEvent, jobId: string) => {
+    e.preventDefault()
+    if (!user) return
+    setSavingId(jobId)
+    try {
+      if (savedJobIds.has(jobId)) {
+        await api.delete(`/jobs/${jobId}/save`)
+        setSavedJobIds((prev) => {
+          const next = new Set(prev)
+          next.delete(jobId)
+          return next
+        })
+      } else {
+        await api.post(`/jobs/${jobId}/save`)
+        setSavedJobIds((prev) => new Set(prev).add(jobId))
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSavingId(null)
+    }
   }
 
   const getCategoryLabel = (value: string) => {
@@ -88,8 +156,18 @@ export default function Jobs() {
   }
 
   const getJobTypeLabel = (value: string) => {
-    return value.replace(/_/g, ' ')
+    return JOB_TYPES.find((t) => t.value === value)?.label || value.replace(/_/g, ' ')
   }
+
+  const hasActiveFilters = [
+    selectedCategory,
+    searchQuery,
+    locationQuery,
+    skillsQuery,
+    selectedJobType,
+    remoteOnly,
+    sort !== 'newest',
+  ].some(Boolean)
 
   return (
     <div>
@@ -108,6 +186,20 @@ export default function Jobs() {
             placeholder="Search jobs by title or description..."
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
+          <input
+            type="text"
+            value={locationInput}
+            onChange={(e) => setLocationInput(e.target.value)}
+            placeholder="Location..."
+            className="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <input
+            type="text"
+            value={skillsInput}
+            onChange={(e) => setSkillsInput(e.target.value)}
+            placeholder="Skills (e.g. React, Node)"
+            className="w-full sm:w-48 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
           <button
             type="submit"
             className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap"
@@ -117,7 +209,6 @@ export default function Jobs() {
         </form>
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Category:</label>
           <select
             value={selectedCategory}
             onChange={(e) => handleCategoryChange(e.target.value)}
@@ -130,7 +221,40 @@ export default function Jobs() {
               </option>
             ))}
           </select>
-          {(selectedCategory || searchQuery) && (
+
+          <select
+            value={selectedJobType}
+            onChange={(e) => { setSelectedJobType(e.target.value); setPage(1) }}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="">All Types</option>
+            {JOB_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={remoteOnly}
+              onChange={(e) => { setRemoteOnly(e.target.checked); setPage(1) }}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            Remote only
+          </label>
+
+          <select
+            value={sort}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="title">Title A–Z</option>
+            {searchQuery && <option value="relevance">Relevance</option>}
+          </select>
+
+          {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
               className="text-sm text-blue-600 hover:underline"
@@ -158,8 +282,8 @@ export default function Jobs() {
         </div>
       ) : jobs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">No jobs found{selectedCategory || searchQuery ? ' matching your filters' : ''}.</p>
-          {(selectedCategory || searchQuery) && (
+          <p className="text-lg">No jobs found{hasActiveFilters ? ' matching your filters' : ''}.</p>
+          {hasActiveFilters && (
             <button onClick={handleClearFilters} className="text-blue-600 hover:underline mt-2 block mx-auto">
               Clear filters
             </button>
@@ -178,7 +302,9 @@ export default function Jobs() {
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-semibold text-gray-900 mb-1">{job.title}</h2>
                     <p className="text-gray-500 text-sm mb-3">
-                      {job.recruiter?.name} {job.location && `• ${job.location}`}
+                      {job.recruiter?.name}
+                      {job.location && ` • ${job.location}`}
+                      {job.remote && <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Remote</span>}
                     </p>
                     <p className="text-gray-600 text-sm line-clamp-2 mb-4">{job.description}</p>
                     <div className="flex flex-wrap gap-2">
@@ -200,8 +326,23 @@ export default function Jobs() {
                       ))}
                     </div>
                   </div>
-                  <div className="text-sm text-gray-400 ml-4 whitespace-nowrap shrink-0">
-                    {new Date(job.createdAt).toLocaleDateString()}
+                  <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
+                    <span className="text-sm text-gray-400 whitespace-nowrap">
+                      {new Date(job.createdAt).toLocaleDateString()}
+                    </span>
+                    {user?.role === 'candidate' && (
+                      <button
+                        onClick={(e) => handleSaveToggle(e, job._id)}
+                        disabled={savingId === job._id}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium border transition-colors ${
+                          savedJobIds.has(job._id)
+                            ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
+                            : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
+                        } disabled:opacity-50`}
+                      >
+                        {savedJobIds.has(job._id) ? '★ Saved' : '☆ Save'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </Link>

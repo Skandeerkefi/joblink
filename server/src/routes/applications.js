@@ -1,22 +1,51 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
+const Resume = require('../models/Resume');
 const { protect, authorize } = require('../middleware/auth');
+const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
 
 // POST /api/applications
 router.post('/', protect, authorize('candidate'), async (req, res, next) => {
   try {
     const { jobId, resumeId, coverLetter } = req.body;
-    const existing = await Application.findOne({ job: String(jobId), candidate: req.user.id });
+    if (!jobId || !mongoose.Types.ObjectId.isValid(String(jobId))) {
+      return res.status(400).json({ success: false, message: 'Invalid jobId' });
+    }
+    if (resumeId && !mongoose.Types.ObjectId.isValid(String(resumeId))) {
+      return res.status(400).json({ success: false, message: 'Invalid resumeId' });
+    }
+    const jobObjectId = new mongoose.Types.ObjectId(String(jobId));
+    const resumeObjectId = resumeId ? new mongoose.Types.ObjectId(String(resumeId)) : null;
+    const existing = await Application.findOne({ job: jobObjectId, candidate: req.user.id });
     if (existing) return res.status(400).json({ success: false, message: 'Already applied to this job' });
+
+    const job = await Job.findById(jobObjectId);
+    if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+
+    let resume;
+    if (resumeObjectId) {
+      resume = await Resume.findById(resumeObjectId);
+      if (!resume) return res.status(404).json({ success: false, message: 'Resume not found' });
+      if (resume.candidate.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Not authorized to use this resume' });
+      }
+    }
+
+    const ats = calculateAtsScore(resume);
+    const match = calculateMatchScore(resume, job);
+
     const application = await Application.create({
-      job: jobId,
+      job: jobObjectId,
       candidate: req.user.id,
-      resume: resumeId || undefined,
+      resume: resumeObjectId || undefined,
       coverLetter,
+      atsScore: ats.score,
+      matchScore: match.score,
     });
-    res.status(201).json({ success: true, application });
+    res.status(201).json({ success: true, application, score: { ats: ats.score, match: match.score } });
   } catch (err) {
     next(err);
   }
@@ -45,6 +74,18 @@ router.get('/for-my-jobs', protect, authorize('recruiter'), async (req, res, nex
       .populate('candidate', 'name email')
       .populate('resume', 'originalName fileUrl')
       .sort({ createdAt: -1 });
+
+    if (req.query.group === 'true') {
+      const grouped = {};
+      const STATUSES = ['APPLIED', 'VIEWED', 'INTERVIEW', 'REJECTED', 'HIRED'];
+      STATUSES.forEach((s) => { grouped[s] = []; });
+      applications.forEach((app) => {
+        if (grouped[app.status]) grouped[app.status].push(app);
+        else console.warn(`Unhandled application status "${app.status}" for application ${app._id}`);
+      });
+      return res.json({ success: true, grouped });
+    }
+
     res.json({ success: true, applications });
   } catch (err) {
     next(err);

@@ -57,7 +57,21 @@ app.use('/api', apiLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+app.get('/api/status', (req, res) => {
+  if (app.locals.dbConnectionError) {
+    return res.status(503).json({
+      success: false,
+      status: 'degraded',
+      message: 'API is running but database is unavailable.',
+    });
+  }
+
+  return res.json({ success: true, status: 'ok' });
+});
+
 app.use((req, res, next) => {
+  if (req.path === '/api/status') return next();
+
   if (app.locals.dbConnectionError) {
     return res.status(503).json({
       success: false,

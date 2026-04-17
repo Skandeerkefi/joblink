@@ -19,7 +19,6 @@ const seedDB = async () => {
       email: 'test@candidate.com',
       password: 'password123',
       role: 'candidate',
-      emailVerified: true,
     });
 
     const recruiter = await User.create({
@@ -27,7 +26,6 @@ const seedDB = async () => {
       email: 'test@recruiter.com',
       password: 'password123',
       role: 'recruiter',
-      emailVerified: true,
     });
 
     const admin = await User.create({
@@ -35,7 +33,6 @@ const seedDB = async () => {
       email: 'test@admin.com',
       password: 'password123',
       role: 'admin',
-      emailVerified: true,
     });
 
     console.log(`Created users: ${candidate.email}, ${recruiter.email}, ${admin.email}`);

@@ -26,7 +26,7 @@ router.post(
       const existing = await User.findOne({ email: String(email) });
       if (existing) return res.status(400).json({ success: false, message: 'Email already in use' });
 
-      await User.create({ name, email, password, role, emailVerified: true });
+      await User.create({ name, email, password, role });
       res.status(201).json({
         success: true,
         message: 'Account created successfully. You can now sign in.',
@@ -56,7 +56,7 @@ router.post(
       res.json({
         success: true,
         token,
-        user: { id: user._id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified },
+        user: { id: user._id, name: user.name, email: user.email, role: user.role },
       });
     } catch (err) {
       next(err);
@@ -71,7 +71,7 @@ router.get('/me', protect, async (req, res, next) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({
       success: true,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
     next(err);

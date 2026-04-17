@@ -17,7 +17,7 @@ router.get('/users', async (req, res, next) => {
     }
     const filter = role === 'all' ? { role: { $in: ['candidate', 'recruiter'] } } : { role };
 
-    const users = await User.find(filter).select('name email role emailVerified createdAt').sort({ createdAt: -1 });
+    const users = await User.find(filter).select('name email role createdAt').sort({ createdAt: -1 });
     res.json({ success: true, users });
   } catch (err) {
     next(err);
@@ -37,7 +37,7 @@ router.patch('/users/:id', async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Admin users cannot be modified here' });
     }
 
-    const { name, email, role, emailVerified } = req.body;
+    const { name, email, role } = req.body;
 
     if (name !== undefined) user.name = String(name).trim();
     if (email !== undefined) user.email = String(email).toLowerCase().trim();
@@ -47,8 +47,6 @@ router.patch('/users/:id', async (req, res, next) => {
       }
       user.role = String(role);
     }
-    if (emailVerified !== undefined) user.emailVerified = Boolean(emailVerified);
-
     await user.save();
 
     res.json({
@@ -58,7 +56,6 @@ router.patch('/users/:id', async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        emailVerified: user.emailVerified,
       },
     });
   } catch (err) {

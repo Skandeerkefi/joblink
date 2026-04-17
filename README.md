@@ -15,24 +15,21 @@ A full-stack job platform built with the MERN stack (MongoDB, Express, React, No
 cd server
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI, JWT secret and optional SMTP credentials for email verification
+# Edit .env with your MongoDB URI, JWT secret and optional Resend credentials for email verification
 npm run dev
 ```
 
 Server runs at http://localhost:5000
 
-### Email verification (optional SMTP config)
+### Email verification (optional Resend config)
 
 To send real verification emails, configure these server env vars:
 
-- `SMTP_HOST`
-- `SMTP_PORT` (default `587`)
-- `SMTP_SECURE` (`true`/`false`)
-- `SMTP_USER`
-- `SMTP_PASS`
-- `SMTP_FROM`
+- `RESEND_API_KEY` (Resend API key)
+- `RESEND_FROM` (verified sender address, e.g. `onboarding@resend.dev`)
 
-If SMTP is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
+If Resend is not configured, verification emails are logged as JSON payloads in server logs (development fallback).
+When the email provider is unreachable, auth endpoints return `503 Service Unavailable` with a clear message instead of a generic `500` error.
 
 ### Client
 
@@ -40,7 +37,7 @@ If SMTP is not configured, verification emails are logged as JSON payloads in se
 cd client
 npm install
 cp .env.example .env
-# Edit .env if needed (default API URL is /api)
+# Edit .env if needed (default API URL is https://joblink-production-00f1.up.railway.app/api)
 npm run dev
 ```
 
@@ -69,7 +66,7 @@ Set these environment variables in Vercel:
 - `MONGO_URI`
 - `JWT_SECRET`
 - `CLIENT_URL` (your deployed frontend URL; comma-separated list is supported)
-- Optional email vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- Optional email vars: `RESEND_API_KEY`, `RESEND_FROM`
 
 ## Tech Stack
 

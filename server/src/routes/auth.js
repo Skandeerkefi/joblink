@@ -12,6 +12,11 @@ const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+const safeErrorMetadata = (error) => ({
+  name: error?.name || 'Error',
+  code: error?.code || 'UNKNOWN',
+});
+
 const getClientUrl = (req) => {
   const configuredOrigins = process.env.CLIENT_URL
     ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
@@ -66,9 +71,9 @@ router.post(
           verificationUrl,
         });
       } catch (emailError) {
-        console.error('Verification email send failed during registration:', emailError.message || emailError);
+        console.error('Verification email send failed during registration:', safeErrorMetadata(emailError));
         await User.deleteOne({ _id: user._id }).catch((cleanupError) => {
-          console.error('Failed to roll back user after email failure:', cleanupError.message || cleanupError);
+          console.error('Failed to roll back user after email failure:', safeErrorMetadata(cleanupError));
         });
         return res.status(503).json({
           success: false,
@@ -186,7 +191,7 @@ router.post(
           verificationUrl,
         });
       } catch (emailError) {
-        console.error('Verification email resend failed:', emailError.message || emailError);
+        console.error('Verification email resend failed:', safeErrorMetadata(emailError));
         return res.status(503).json({
           success: false,
           message: 'Verification email service is temporarily unavailable. Please try again later.',

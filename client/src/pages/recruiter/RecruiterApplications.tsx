@@ -293,6 +293,10 @@ export default function RecruiterApplications() {
                       const matchDetails = formatScoreDetails(app.matchBreakdown, MATCH_MAX_POINTS)
                       const matchedSkills = app.matchBreakdown?.matchedSkills
                       const requiredSkills = app.matchBreakdown?.requiredSkills
+                      const hasSkillMatchCounts =
+                        typeof matchedSkills === 'number' && typeof requiredSkills === 'number'
+                      const manualSkillsCount = app.resume?.manualData?.skills?.length || 0
+                      const manualExperienceCount = app.resume?.manualData?.experience?.length || 0
                       return (
                         <tr key={app._id}>
                           <td className="px-4 py-3 align-top">
@@ -308,11 +312,9 @@ export default function RecruiterApplications() {
                           <td className="px-4 py-3 align-top">
                             <div className="text-sm font-semibold text-indigo-600">{app.matchScore ?? '—'}/100</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {typeof matchedSkills === 'number' && typeof requiredSkills === 'number'
-                                ? `Skills matched: ${matchedSkills}/${requiredSkills}`
-                                : null}
+                              {hasSkillMatchCounts ? `Skills matched: ${matchedSkills}/${requiredSkills}` : null}
                               {matchDetails.length > 0
-                                ? `${typeof matchedSkills === 'number' && typeof requiredSkills === 'number' ? ' • ' : ''}${matchDetails.join(' • ')}`
+                                ? `${hasSkillMatchCounts ? ' • ' : ''}${matchDetails.join(' • ')}`
                                 : ''}
                             </div>
                           </td>
@@ -344,7 +346,7 @@ export default function RecruiterApplications() {
                               <div className="text-xs text-gray-700 dark:text-gray-300">
                                 <div className="font-medium">{app.resume.title || 'Manual CV'}</div>
                                 <div className="text-gray-500">
-                                  Skills: {app.resume.manualData?.skills?.length || 0} • Experience: {app.resume.manualData?.experience?.length || 0}
+                                  Skills: {manualSkillsCount} • Experience: {manualExperienceCount}
                                 </div>
                               </div>
                             ) : (

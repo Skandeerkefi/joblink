@@ -40,7 +40,7 @@ If SMTP is not configured, verification emails are logged as JSON payloads in se
 cd client
 npm install
 cp .env.example .env
-# Edit .env if needed (default API URL is http://localhost:5000/api)
+# Edit .env if needed (default API URL is /api)
 npm run dev
 ```
 
@@ -56,6 +56,20 @@ npm run seed
 This creates test accounts:
 - Candidate: `test@candidate.com` / `password123`
 - Recruiter: `test@recruiter.com` / `password123`
+
+## Deploy to Vercel (frontend + backend in one project)
+
+This repository includes a root `vercel.json` that:
+- serves the React app from `client/dist`
+- runs Express API from `api/index.js`
+- routes `/api/*` and `/uploads/*` to the backend
+- uses SPA fallback routing to `index.html`
+
+Set these environment variables in Vercel:
+- `MONGO_URI`
+- `JWT_SECRET`
+- `CLIENT_URL` (your deployed frontend URL; comma-separated list is supported)
+- Optional email vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 
 ## Tech Stack
 

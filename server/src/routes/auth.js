@@ -12,6 +12,31 @@ const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+const getClientUrl = (req) => {
+  const configuredOrigins = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+  const requestOrigin = req.get('origin');
+
+  if (requestOrigin && (!configuredOrigins.length || configuredOrigins.includes(requestOrigin))) {
+    return requestOrigin;
+  }
+
+  if (process.env.CLIENT_URL) {
+    return configuredOrigins[0];
+  }
+
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return 'http://localhost:5173';
+};
+
 // POST /api/auth/register
 router.post(
   '/register',
@@ -32,7 +57,7 @@ router.post(
       const verificationToken = user.generateEmailVerificationToken();
       await user.save();
 
-      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
       await sendVerificationEmail({
         email: user.email,
@@ -141,7 +166,7 @@ router.post(
       const verificationToken = user.generateEmailVerificationToken();
       await user.save();
 
-      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      const clientUrl = getClientUrl(req);
       const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
       await sendVerificationEmail({
         email: user.email,

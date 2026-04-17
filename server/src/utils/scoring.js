@@ -36,6 +36,26 @@ const SINGLE_TOKEN_MATCH_LIMIT = 2;
 const CONTACT_FIELD_MAX_SCORE = 20;
 const CONTACT_FIELDS_COUNT = 3; // fullName, email, phone
 const CONTACT_FIELD_WEIGHT = CONTACT_FIELD_MAX_SCORE / CONTACT_FIELDS_COUNT;
+const UPLOAD_SECTION_KEYWORDS = [
+  'summary',
+  'experience',
+  'education',
+  'skills',
+  'projects',
+  'certifications',
+];
+const ACTION_KEYWORDS = [
+  'built',
+  'designed',
+  'developed',
+  'implemented',
+  'improved',
+  'managed',
+  'optimized',
+  'led',
+  'delivered',
+  'launched',
+];
 
 const buildResumeText = (resume) => {
   if (!resume) return '';
@@ -72,20 +92,52 @@ const buildResumeText = (resume) => {
       .join(' ');
   }
 
-  return [resume.originalName, resume.title, resume.mimeType].filter(Boolean).join(' ');
+  return [resume.originalName, resume.title, resume.mimeType, resume.parsedText].filter(Boolean).join(' ');
 };
 
 const calculateAtsScore = (resume) => {
   if (!resume) return { score: 0, breakdown: { message: 'No resume selected' } };
 
   if (resume.type !== 'MANUAL') {
+    const extractedText = String(resume.parsedText || '').trim();
+    if (!extractedText) {
+      return {
+        score: 45,
+        breakdown: {
+          format: 20,
+          structure: 10,
+          content: 15,
+          note: resume.parseError || 'Uploaded file detected. Text extraction was not available for this file yet.',
+        },
+      };
+    }
+
+    const normalizedText = normalizeText(extractedText);
+    const tokens = unique(normalize(extractedText));
+    const wordCount = tokens.length;
+    const hasEmail = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(extractedText);
+    const hasPhone = /(\+?\d[\d\s().-]{7,}\d)/.test(extractedText);
+    const hasLink = /(https?:\/\/|linkedin\.com|github\.com)/i.test(extractedText);
+    const sectionHits = UPLOAD_SECTION_KEYWORDS.filter((section) =>
+      new RegExp(`\\b${section}\\b`, 'i').test(extractedText)
+    ).length;
+    const actionHits = ACTION_KEYWORDS.filter((word) => normalizedText.includes(` ${word} `)).length;
+
+    const contactScore = (hasEmail ? 8 : 0) + (hasPhone ? 8 : 0) + (hasLink ? 4 : 0);
+    const structureScore = Math.min(25, sectionHits * 4 + (sectionHits >= 4 ? 3 : 0));
+    const lengthScore = Math.max(0, Math.min(20, 20 - Math.abs(wordCount - 450) / 45));
+    const contentScore = Math.min(35, Math.min(20, actionHits * 2.5) + Math.min(15, wordCount / 45));
+    const total = Math.round(Math.min(100, contactScore + structureScore + lengthScore + contentScore));
+
     return {
-      score: 45,
+      score: total,
       breakdown: {
-        format: 20,
-        structure: 10,
-        content: 15,
-        note: 'Uploaded file detected. Upload parsing is limited; manual CV gives more accurate ATS score.',
+        contact: Math.round(contactScore),
+        structure: Math.round(structureScore),
+        length: Math.round(lengthScore),
+        content: Math.round(contentScore),
+        words: wordCount,
+        parsed: true,
       },
     };
   }

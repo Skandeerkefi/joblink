@@ -61,6 +61,10 @@ const resumeSchema = new mongoose.Schema({
   fileUrl: { type: String },
   fileSize: { type: Number },
   mimeType: { type: String },
+  parsedText: { type: String },
+  parseStatus: { type: String, enum: ['NOT_PARSED', 'PARSED', 'FAILED'], default: 'NOT_PARSED' },
+  parseError: { type: String },
+  parsedAt: { type: Date },
   // MANUAL fields
   title: { type: String },
   manualData: { type: manualDataSchema },

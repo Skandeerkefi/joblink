@@ -6,6 +6,10 @@ const Job = require('../models/Job');
 const Resume = require('../models/Resume');
 const { protect, authorize } = require('../middleware/auth');
 const { calculateAtsScore, calculateMatchScore } = require('../utils/scoring');
+const { ensureUploadedResumeParsed } = require('../utils/resumeParser');
+const path = require('path');
+
+const uploadsDir = path.join(__dirname, '../../uploads');
 
 // POST /api/applications
 router.post('/', protect, authorize('candidate'), async (req, res, next) => {
@@ -32,6 +36,7 @@ router.post('/', protect, authorize('candidate'), async (req, res, next) => {
       if (resume.candidate.toString() !== req.user.id) {
         return res.status(403).json({ success: false, message: 'Not authorized to use this resume' });
       }
+      await ensureUploadedResumeParsed(resume, uploadsDir);
     }
 
     const ats = calculateAtsScore(resume);

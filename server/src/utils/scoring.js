@@ -26,13 +26,41 @@ const normalize = (text) =>
     .filter((w) => w.length > 1);
 
 const unique = (arr) => [...new Set(arr)];
-const SKILL_WEIGHT = 70;
-const KEYWORD_WEIGHT = 25;
-const DEFAULT_SKILL_SCORE = 35;
-const DEFAULT_KEYWORD_SCORE = 10;
-const CATEGORY_BONUS_POINTS = 5;
 const SKILL_MATCH_THRESHOLD_RATIO = 0.6;
 const SINGLE_TOKEN_MATCH_LIMIT = 2;
+const MATCH_WEIGHTS = {
+  skills: 0.4,
+  experience: 0.25,
+  education: 0.1,
+  keywordsTools: 0.15,
+  bonus: 0.1,
+};
+const EXPERIENCE_LEVEL_REQUIREMENT = {
+  DEBUTANT: 0,
+  JUNIOR: 1,
+  INTERMEDIATE: 3,
+  SENIOR: 5,
+};
+const DEFAULT_REQUIRED_YEARS = 1;
+const FIELD_KEYWORDS_BY_CATEGORY = {
+  SOFTWARE_ENGINEERING: ['software', 'engineering', 'computer', 'frontend', 'backend', 'fullstack'],
+  DATA: ['data', 'analytics', 'machine', 'statistics', 'ai'],
+  CYBERSECURITY: ['security', 'cybersecurity', 'network', 'information'],
+  PRODUCT: ['product', 'management', 'business'],
+  UI_UX: ['design', 'ux', 'ui', 'product'],
+  MARKETING: ['marketing', 'digital', 'brand', 'growth'],
+  SALES: ['sales', 'business', 'development'],
+  BUSINESS_DEVELOPMENT: ['business', 'development', 'sales', 'strategy'],
+  FINANCE: ['finance', 'accounting', 'economics', 'business'],
+  HR: ['human', 'resources', 'management', 'psychology'],
+  OPERATIONS: ['operations', 'supply', 'logistics', 'management'],
+  CUSTOMER_SUCCESS: ['customer', 'success', 'support', 'service'],
+};
+const TOOL_STOPWORDS = new Set([
+  'and', 'with', 'for', 'the', 'you', 'your', 'our', 'this', 'that', 'will', 'are', 'from', 'into',
+  'using', 'use', 'have', 'has', 'years', 'experience', 'required', 'preferred', 'must', 'strong',
+  'ability', 'skills', 'skill', 'work', 'team', 'role', 'responsibilities',
+]);
 const CONTACT_FIELD_MAX_SCORE = 20;
 const CONTACT_FIELDS_COUNT = 3; // fullName, email, phone
 const CONTACT_FIELD_WEIGHT = CONTACT_FIELD_MAX_SCORE / CONTACT_FIELDS_COUNT;
@@ -209,49 +237,196 @@ const calculateAtsScore = (resume) => {
   };
 };
 
+const skillMatchesTokenSet = (skill, tokenSet) => {
+  const skillTokens = unique(normalize(skill));
+  if (skillTokens.length === 0) return false;
+  const overlap = skillTokens.filter((token) => tokenSet.has(token)).length;
+  const threshold =
+    skillTokens.length <= SINGLE_TOKEN_MATCH_LIMIT
+      ? 1
+      : Math.ceil(skillTokens.length * SKILL_MATCH_THRESHOLD_RATIO);
+  return overlap >= threshold;
+};
+
+const extractCandidateYears = (resume, resumeText) => {
+  if (!resume) return 0;
+
+  if (resume.type === 'MANUAL') {
+    const entries = resume.manualData?.experience || [];
+    const currentYear = new Date().getFullYear();
+    const years = entries.reduce((sum, entry) => {
+      const startYear = Number(String(entry.startDate || '').match(/\d{4}/)?.[0]);
+      const endYear = entry.current
+        ? currentYear
+        : Number(String(entry.endDate || '').match(/\d{4}/)?.[0]) || currentYear;
+      if (Number.isFinite(startYear) && startYear > 1900 && endYear >= startYear) {
+        return sum + (endYear - startYear);
+      }
+      return sum + 1;
+    }, 0);
+    return Math.max(0, Math.min(40, years));
+  }
+
+  const yearsInText = [...resumeText.matchAll(/(\d+)\+?\s*(?:years?|yrs?)/gi)]
+    .map((m) => Number(m[1]))
+    .filter((v) => Number.isFinite(v));
+  if (yearsInText.length > 0) return Math.max(...yearsInText);
+
+  const ranges = [...resumeText.matchAll(/(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}|(19|20)\d{2}\s*[-–]\s*(present|current)/gi)];
+  return Math.min(40, Math.max(0, ranges.length));
+};
+
+const getRequiredYears = (job) => {
+  const fromLevel = EXPERIENCE_LEVEL_REQUIREMENT[job.experienceLevel] ?? DEFAULT_REQUIRED_YEARS;
+  const text = `${job.title || ''} ${job.description || ''}`;
+  const explicit = text.match(/(\d+)\+?\s*(?:years?|yrs?)/i);
+  const parsedExplicit = explicit ? Number(explicit[1]) : null;
+  return Number.isFinite(parsedExplicit) ? parsedExplicit : fromLevel;
+};
+
+const getEducationSignals = (resume, job) => {
+  const resumeText = buildResumeText(resume);
+  const resumeTokens = new Set(normalize(resumeText));
+
+  const requiredText = `${job.title || ''} ${job.description || ''}`;
+  const requiredLower = requiredText.toLowerCase();
+  let requiredLevel = 1;
+  if (/\b(phd|doctorate|doctoral)\b/.test(requiredLower)) requiredLevel = 5;
+  else if (/\b(master|msc|mba)\b/.test(requiredLower)) requiredLevel = 4;
+  else if (/\b(bachelor|bsc|license|licence)\b/.test(requiredLower)) requiredLevel = 3;
+  else if (/\b(associate)\b/.test(requiredLower)) requiredLevel = 2;
+
+  const manualEducation = resume?.manualData?.education || [];
+  const manualDegreeText = manualEducation.map((e) => `${e.degree || ''} ${e.field || ''}`).join(' ');
+  const allEducationText = `${manualDegreeText} ${resumeText}`.toLowerCase();
+
+  let candidateLevel = 1;
+  if (/\b(phd|doctorate|doctoral)\b/.test(allEducationText)) candidateLevel = 5;
+  else if (/\b(master|msc|mba)\b/.test(allEducationText)) candidateLevel = 4;
+  else if (/\b(bachelor|bsc|license|licence)\b/.test(allEducationText)) candidateLevel = 3;
+  else if (/\b(associate)\b/.test(allEducationText)) candidateLevel = 2;
+
+  const categoryKeywords = FIELD_KEYWORDS_BY_CATEGORY[job.category] || [];
+  const requiredFieldTokens = unique([
+    ...categoryKeywords,
+    ...normalize(requiredText).filter((token) => token.length > 2),
+  ]).slice(0, 40);
+  const fieldOverlap = requiredFieldTokens.filter((token) => resumeTokens.has(token)).length;
+  const fieldMatchRatio = requiredFieldTokens.length ? fieldOverlap / requiredFieldTokens.length : 0;
+
+  return { requiredLevel, candidateLevel, fieldMatchRatio };
+};
+
+const getToolsFromJob = (job) => {
+  const text = `${job.title || ''} ${job.description || ''} ${(job.skills || []).join(' ')}`;
+  return unique(
+    normalize(text).filter((token) => token.length > 2 && !TOOL_STOPWORDS.has(token))
+  ).slice(0, 60);
+};
+
+const calculateBonusScore = (resume, relevantSkills) => {
+  const resumeText = buildResumeText(resume);
+  const resumeTokenSet = new Set(normalize(resumeText));
+  const manualData = resume?.manualData || {};
+  const projects = manualData.projects || [];
+  const certifications = manualData.certifications || [];
+
+  const relevantSkillHits = relevantSkills.filter((skill) => skillMatchesTokenSet(skill, resumeTokenSet)).length;
+  const projectSkillCoverage = relevantSkills.length ? relevantSkillHits / relevantSkills.length : 0;
+  const projectScore = Math.min(50, Math.round(projects.length * 15 + projectSkillCoverage * 35));
+
+  const certScore = Math.min(30, certifications.length * 10);
+
+  const hasPortfolioLink = /(portfolio|github\.com|behance|dribbble|gitlab|https?:\/\/)/i.test(resumeText);
+  const portfolioScore = hasPortfolioLink ? 20 : 0;
+
+  return Math.max(0, Math.min(100, projectScore + certScore + portfolioScore));
+};
+
 const calculateMatchScore = (resume, job) => {
   if (!resume || !job) return { score: 0, breakdown: { message: 'Resume or job missing' } };
 
-  const resumeTextTokens = unique(normalize(buildResumeText(resume)));
-  const resumeTokenSet = new Set(resumeTextTokens);
+  const resumeText = buildResumeText(resume);
+  const resumeTokenSet = new Set(unique(normalize(resumeText)));
 
-  const jobSkills = (job.skills || [])
-    .map((s) => unique(normalize(s)))
-    .filter((tokens) => tokens.length > 0);
-  const jobSkillMatches = jobSkills.reduce((matched, skillTokens) => {
-    const overlap = skillTokens.filter((token) => resumeTokenSet.has(token)).length;
-    const threshold =
-      skillTokens.length <= SINGLE_TOKEN_MATCH_LIMIT
-        ? 1
-        : Math.ceil(skillTokens.length * SKILL_MATCH_THRESHOLD_RATIO);
-    return matched + (overlap >= threshold ? 1 : 0);
-  }, 0);
-  const skillScore = jobSkills.length
-    ? (jobSkillMatches / jobSkills.length) * SKILL_WEIGHT
-    : DEFAULT_SKILL_SCORE;
+  const requiredSkills = (job.skills || []).filter(Boolean);
+  const optionalSkills = Array.isArray(job.optionalSkills) ? job.optionalSkills.filter(Boolean) : [];
+  const matchedRequiredSkills = requiredSkills.filter((skill) => skillMatchesTokenSet(skill, resumeTokenSet));
+  const matchedOptionalSkills = optionalSkills.filter((skill) => skillMatchesTokenSet(skill, resumeTokenSet));
+  const totalSkillWeight = requiredSkills.length + optionalSkills.length * 0.5;
+  const matchedSkillWeight = matchedRequiredSkills.length + matchedOptionalSkills.length * 0.5;
+  const skillsMatch = totalSkillWeight > 0 ? (matchedSkillWeight / totalSkillWeight) * 100 : 100;
 
-  const jobKeywordTokens = unique(normalize(`${job.title || ''} ${job.description || ''}`));
-  const keywordMatches = jobKeywordTokens.filter((k) => resumeTokenSet.has(k)).length;
-  const keywordScore = jobKeywordTokens.length
-    ? Math.min(KEYWORD_WEIGHT, (keywordMatches / jobKeywordTokens.length) * KEYWORD_WEIGHT)
-    : DEFAULT_KEYWORD_SCORE;
+  const candidateYears = extractCandidateYears(resume, resumeText);
+  const requiredYears = getRequiredYears(job);
+  let experienceMatch = 100;
+  if (requiredYears > 0 && candidateYears < requiredYears) {
+    const ratio = candidateYears / requiredYears;
+    if (ratio >= 0.85) experienceMatch = 80;
+    else if (ratio >= 0.65) experienceMatch = 70;
+    else if (ratio >= 0.45) experienceMatch = 50;
+    else experienceMatch = 30;
+  }
 
-  const categoryTokens = normalize(String(job.category || '').replace(/_/g, ' '));
-  const categoryBonus =
-    categoryTokens.length > 0 && categoryTokens.every((token) => resumeTokenSet.has(token))
-      ? CATEGORY_BONUS_POINTS
-      : 0;
+  const { requiredLevel, candidateLevel, fieldMatchRatio } = getEducationSignals(resume, job);
+  let educationMatch = 30;
+  if (candidateLevel >= requiredLevel && fieldMatchRatio >= 0.2) educationMatch = 100;
+  else if (candidateLevel >= requiredLevel - 1 || fieldMatchRatio >= 0.1) educationMatch = 70;
 
-  const total = Math.round(Math.min(100, skillScore + keywordScore + categoryBonus));
+  const jobTools = getToolsFromJob(job);
+  const matchedTools = jobTools.filter((tool) => resumeTokenSet.has(tool));
+  const keywordsToolsMatch = jobTools.length ? (matchedTools.length / jobTools.length) * 100 : 100;
+
+  const bonus = calculateBonusScore(resume, requiredSkills.length ? requiredSkills : jobTools);
+
+  const finalScore =
+    skillsMatch * MATCH_WEIGHTS.skills +
+    experienceMatch * MATCH_WEIGHTS.experience +
+    educationMatch * MATCH_WEIGHTS.education +
+    keywordsToolsMatch * MATCH_WEIGHTS.keywordsTools +
+    bonus * MATCH_WEIGHTS.bonus;
+  const total = Math.round(Math.min(100, Math.max(0, finalScore)));
+
+  const tips = [];
+  const missingRequiredSkills = requiredSkills.filter((skill) => !matchedRequiredSkills.includes(skill));
+  if (missingRequiredSkills.length > 0) {
+    tips.push(`Add evidence for these required skills: ${missingRequiredSkills.slice(0, 5).join(', ')}`);
+  }
+  if (candidateYears < requiredYears) {
+    tips.push(`Highlight projects or internships proving ${requiredYears}+ years equivalent experience.`);
+  }
+  if (educationMatch < 100) {
+    tips.push('Clarify your education relevance and add coursework or certifications aligned with this role.');
+  }
+  const missingTools = jobTools.filter((tool) => !matchedTools.includes(tool));
+  if (missingTools.length > 0) {
+    tips.push(`Include tools/keywords used in this job post: ${missingTools.slice(0, 8).join(', ')}`);
+  }
+  if (bonus < 60) {
+    tips.push('Add portfolio links, measurable project outcomes, and relevant certifications to strengthen your profile.');
+  }
 
   return {
     score: total,
     breakdown: {
-      matchedSkills: jobSkillMatches,
-      requiredSkills: jobSkills.length,
-      skillScore: Math.round(skillScore),
-      keywordScore: Math.round(keywordScore),
-      categoryBonus,
+      skillsMatch: Math.round(skillsMatch),
+      experienceMatch: Math.round(experienceMatch),
+      educationMatch: Math.round(educationMatch),
+      keywordsToolsMatch: Math.round(keywordsToolsMatch),
+      bonus: Math.round(bonus),
+      matchedRequiredSkills: matchedRequiredSkills.length,
+      requiredSkills: requiredSkills.length,
+      matchedOptionalSkills: matchedOptionalSkills.length,
+      optionalSkills: optionalSkills.length,
+      candidateYears: Number(candidateYears.toFixed(1)),
+      requiredYears,
+      matchedTools: matchedTools.length,
+      totalTools: jobTools.length,
+      missingRequiredSkills: missingRequiredSkills.slice(0, 10),
+      missingTools: missingTools.slice(0, 15),
+      tips,
+      formula:
+        '(Skills Match * 0.4) + (Experience Match * 0.25) + (Education Match * 0.1) + (Keywords/Tools Match * 0.15) + (Bonus * 0.1)',
     },
   };
 };

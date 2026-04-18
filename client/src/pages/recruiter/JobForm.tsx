@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api/axios'
-import { CATEGORIES, JOB_TYPES } from '../../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../../constants/categories'
 import { TUNISIA_GOVERNORATES } from '../../constants/tunisiaGovernorates'
 import { useLanguage } from '../../context/LanguageContext'
 
@@ -10,6 +10,7 @@ interface JobFormData {
   description: string
   location: string
   jobType: string
+  experienceLevel: string
   remote: boolean
   category: string
   skills: string
@@ -26,6 +27,7 @@ export default function JobForm() {
     description: '',
     location: '',
     jobType: 'FULL_TIME',
+    experienceLevel: 'JUNIOR',
     remote: false,
     category: 'SOFTWARE_ENGINEERING',
     skills: '',
@@ -46,6 +48,7 @@ export default function JobForm() {
             description: job.description,
             location: job.location || '',
             jobType: job.jobType,
+            experienceLevel: job.experienceLevel || 'JUNIOR',
             remote: Boolean(job.remote),
             category: job.category,
             skills: job.skills.join(', '),
@@ -182,7 +185,7 @@ export default function JobForm() {
             </label>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Type *</label>
               <select
@@ -195,6 +198,23 @@ export default function JobForm() {
                 {JOB_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Experience Level *</label>
+              <select
+                name="experienceLevel"
+                value={form.experienceLevel}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {EXPERIENCE_LEVELS.map((level) => (
+                  <option key={level.value} value={level.value}>
+                    {level.label}
                   </option>
                 ))}
               </select>

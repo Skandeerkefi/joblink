@@ -29,6 +29,7 @@ router.get('/', async (req, res, next) => {
 
     // Job type filter
     if (req.query.jobType) filter.jobType = String(req.query.jobType);
+    if (req.query.experienceLevel) filter.experienceLevel = String(req.query.experienceLevel);
 
     // Remote filter
     if (req.query.remote !== undefined && req.query.remote !== '') {
@@ -159,6 +160,10 @@ router.post(
       .optional({ checkFalsy: true })
       .isIn(TUNISIA_GOVERNORATES)
       .withMessage('Location must be a valid Tunisia governorate'),
+    body('experienceLevel')
+      .optional()
+      .isIn(['DEBUTANT', 'JUNIOR', 'INTERMEDIATE', 'SENIOR'])
+      .withMessage('Experience level must be DEBUTANT, JUNIOR, INTERMEDIATE, or SENIOR'),
   ],
   validate,
   async (req, res, next) => {
@@ -170,6 +175,7 @@ router.post(
         description,
         location: location ? toGovernorate(location) : '',
         jobType,
+        experienceLevel: req.body.experienceLevel || 'JUNIOR',
         remote: Boolean(remote),
         category,
         skills: skills || [],
@@ -189,7 +195,7 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
     if (job.recruiter.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    const { title, description, location, jobType, remote, category, skills, isActive } = req.body;
+    const { title, description, location, jobType, experienceLevel, remote, category, skills, isActive } = req.body;
     const allowedUpdates = {};
     if (title !== undefined) allowedUpdates.title = String(title);
     if (description !== undefined) allowedUpdates.description = String(description);
@@ -208,6 +214,7 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
       }
     }
     if (jobType !== undefined) allowedUpdates.jobType = String(jobType);
+    if (experienceLevel !== undefined) allowedUpdates.experienceLevel = String(experienceLevel);
     if (remote !== undefined) allowedUpdates.remote = Boolean(remote);
     if (category !== undefined) allowedUpdates.category = String(category);
     if (skills !== undefined) allowedUpdates.skills = Array.isArray(skills) ? skills.map(String) : [];

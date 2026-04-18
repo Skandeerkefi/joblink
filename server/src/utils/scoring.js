@@ -272,8 +272,16 @@ const extractCandidateYears = (resume, resumeText) => {
     .filter((v) => Number.isFinite(v));
   if (yearsInText.length > 0) return Math.max(...yearsInText);
 
-  const ranges = [...resumeText.matchAll(/(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}|(19|20)\d{2}\s*[-–]\s*(present|current)/gi)];
-  return Math.min(40, Math.max(0, ranges.length));
+  const currentYear = new Date().getFullYear();
+  const ranges = [...resumeText.matchAll(/((?:19|20)\d{2})\s*[-–]\s*((?:19|20)\d{2}|present|current)/gi)];
+  const estimatedYears = ranges.reduce((sum, match) => {
+    const start = Number(match[1]);
+    const endRaw = String(match[2]).toLowerCase();
+    const end = endRaw === 'present' || endRaw === 'current' ? currentYear : Number(endRaw);
+    if (Number.isFinite(start) && Number.isFinite(end) && end >= start) return sum + (end - start);
+    return sum;
+  }, 0);
+  return Math.min(40, Math.max(0, estimatedYears));
 };
 
 const getRequiredYears = (job) => {

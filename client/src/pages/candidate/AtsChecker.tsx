@@ -177,7 +177,7 @@ export default function AtsChecker() {
                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">How to improve your match</p>
                 <ul className="list-disc list-inside space-y-1 text-xs text-amber-900 dark:text-amber-100">
                   {analysis.matchBreakdown.tips.map((tip, idx) => (
-                    <li key={`${idx}-${tip}`}>{tip}</li>
+                    <li key={idx}>{tip}</li>
                   ))}
                 </ul>
               </div>

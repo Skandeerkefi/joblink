@@ -121,7 +121,7 @@ const scoreToTen = (value: number, max: number) => {
 }
 
 const formatScoreDetails = (
-  breakdown: Record<string, number | string> | undefined,
+  breakdown: Record<string, number | string | string[]> | undefined,
   maxMap: Record<string, number>
 ) => {
   if (!breakdown) return []

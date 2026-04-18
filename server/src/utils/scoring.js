@@ -61,6 +61,9 @@ const TOOL_STOPWORDS = new Set([
   'using', 'use', 'have', 'has', 'years', 'experience', 'required', 'preferred', 'must', 'strong',
   'ability', 'skills', 'skill', 'work', 'team', 'role', 'responsibilities',
 ]);
+const EXPERIENCE_TEXT_PATTERN = '(\\d+)\\+?\\s*(?:years?|yrs?)';
+const EXPERIENCE_TEXT_REGEX = new RegExp(EXPERIENCE_TEXT_PATTERN, 'gi');
+const EXPERIENCE_TEXT_SINGLE_REGEX = new RegExp(EXPERIENCE_TEXT_PATTERN, 'i');
 const CONTACT_FIELD_MAX_SCORE = 20;
 const CONTACT_FIELDS_COUNT = 3; // fullName, email, phone
 const CONTACT_FIELD_WEIGHT = CONTACT_FIELD_MAX_SCORE / CONTACT_FIELDS_COUNT;
@@ -262,12 +265,12 @@ const extractCandidateYears = (resume, resumeText) => {
       if (Number.isFinite(startYear) && startYear > 1900 && endYear >= startYear) {
         return sum + (endYear - startYear);
       }
-      return sum + 1;
+      return sum;
     }, 0);
     return Math.max(0, Math.min(40, years));
   }
 
-  const yearsInText = [...resumeText.matchAll(/(\d+)\+?\s*(?:years?|yrs?)/gi)]
+  const yearsInText = [...resumeText.matchAll(EXPERIENCE_TEXT_REGEX)]
     .map((m) => Number(m[1]))
     .filter((v) => Number.isFinite(v));
   if (yearsInText.length > 0) return Math.max(...yearsInText);
@@ -287,7 +290,7 @@ const extractCandidateYears = (resume, resumeText) => {
 const getRequiredYears = (job) => {
   const fromLevel = EXPERIENCE_LEVEL_REQUIREMENT[job.experienceLevel] ?? DEFAULT_REQUIRED_YEARS;
   const text = `${job.title || ''} ${job.description || ''}`;
-  const explicit = text.match(/(\d+)\+?\s*(?:years?|yrs?)/i);
+  const explicit = text.match(EXPERIENCE_TEXT_SINGLE_REGEX);
   const parsedExplicit = explicit ? Number(explicit[1]) : null;
   return Number.isFinite(parsedExplicit) ? parsedExplicit : fromLevel;
 };

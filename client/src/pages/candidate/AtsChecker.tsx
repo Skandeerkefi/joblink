@@ -14,6 +14,7 @@ interface Analysis {
   matchScore: number | null
   matchBreakdown: Record<string, number | string | string[]> | null
 }
+const MATCH_METADATA_KEYS = new Set(['tips', 'missingRequiredSkills', 'missingTools', 'formula'])
 
 export default function AtsChecker() {
   const [resumes, setResumes] = useState<Resume[]>([])
@@ -153,7 +154,7 @@ export default function AtsChecker() {
             {analysis.matchBreakdown ? (
               <div className="space-y-2 text-sm mb-4">
                 {Object.entries(analysis.matchBreakdown)
-                  .filter(([k]) => !['tips', 'missingRequiredSkills', 'missingTools', 'formula'].includes(k))
+                  .filter(([k]) => !MATCH_METADATA_KEYS.has(k))
                   .map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-1">
                     <span className="capitalize text-gray-600 dark:text-gray-300">{k.replace(/([A-Z])/g, ' $1')}</span>

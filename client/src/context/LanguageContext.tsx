@@ -2,7 +2,49 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 type Language = 'en' | 'fr'
 
-const translations = {
+interface Translation {
+  nav: {
+    home: string
+    jobs: string
+    dashboard: string
+    myApplications: string
+    savedJobs: string
+    myResumes: string
+    atsChecker: string
+    myJobs: string
+    applications: string
+    adminUsers: string
+    light: string
+    dark: string
+    switchToLight: string
+    switchToDark: string
+    login: string
+    register: string
+    logout: string
+    language: string
+  }
+  jobs: {
+    locationPlaceholder: string
+    allGovernorates: string
+    search: string
+    clearAllFilters: string
+    clearFilters: string
+    remoteOnly: string
+    allTypes: string
+    allCategories: string
+    title: string
+    subtitle: string
+    searchPlaceholder: string
+    skillsPlaceholder: string
+  }
+  jobForm: {
+    location: string
+    selectGovernorate: string
+    remotePosition: string
+  }
+}
+
+const translations: Record<Language, Translation> = {
   en: {
     nav: {
       home: 'Home',
@@ -85,12 +127,12 @@ const translations = {
       remotePosition: 'Poste à distance',
     },
   },
-} as const
+}
 
 interface LanguageContextType {
   language: Language
   setLanguage: (language: Language) => void
-  t: typeof translations.en
+  t: Translation
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)

@@ -144,7 +144,11 @@ router.patch('/:id/status', protect, authorize('recruiter'), async (req, res, ne
     }
 
     if (status === 'INTERVIEW' && parsedInterviewAt) {
-      const interviewDateText = parsedInterviewAt.toLocaleString();
+      const interviewDateText = new Intl.DateTimeFormat('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'UTC',
+      }).format(parsedInterviewAt);
       const jobTitle = application.job?.title || 'the selected position';
       application.interviewAt = parsedInterviewAt;
       application.notifications = application.notifications || [];

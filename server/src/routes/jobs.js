@@ -5,6 +5,7 @@ const Job = require('../models/Job');
 const SavedJob = require('../models/SavedJob');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
+const { TUNISIA_GOVERNORATES, toGovernorate } = require('../constants/tunisiaGovernorates');
 
 // GET /api/jobs
 router.get('/', async (req, res, next) => {
@@ -14,9 +15,16 @@ router.get('/', async (req, res, next) => {
     // Category filter
     if (req.query.category) filter.category = String(req.query.category);
 
-    // Location filter (case-insensitive partial match)
+    // Location filter (Tunisia governorates)
     if (req.query.location) {
-      filter.location = new RegExp(req.query.location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const governorate = toGovernorate(req.query.location);
+      if (!governorate) {
+        return res.status(400).json({
+          success: false,
+          message: `Location must be one of: ${TUNISIA_GOVERNORATES.join(', ')}`,
+        });
+      }
+      filter.location = governorate;
     }
 
     // Job type filter
@@ -147,6 +155,10 @@ router.post(
     body('title').notEmpty().withMessage('Title is required'),
     body('description').notEmpty().withMessage('Description is required'),
     body('category').notEmpty().withMessage('Category is required'),
+    body('location')
+      .optional({ checkFalsy: true })
+      .isIn(TUNISIA_GOVERNORATES)
+      .withMessage('Location must be a valid Tunisia governorate'),
   ],
   validate,
   async (req, res, next) => {
@@ -156,7 +168,7 @@ router.post(
         recruiter: req.user.id,
         title,
         description,
-        location,
+        location: location ? toGovernorate(location) : '',
         jobType,
         remote: Boolean(remote),
         category,
@@ -181,7 +193,20 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
     const allowedUpdates = {};
     if (title !== undefined) allowedUpdates.title = String(title);
     if (description !== undefined) allowedUpdates.description = String(description);
-    if (location !== undefined) allowedUpdates.location = String(location);
+    if (location !== undefined) {
+      if (!location) {
+        allowedUpdates.location = '';
+      } else {
+        const governorate = toGovernorate(location);
+        if (!governorate) {
+          return res.status(400).json({
+            success: false,
+            message: 'Location must be a valid Tunisia governorate',
+          });
+        }
+        allowedUpdates.location = governorate;
+      }
+    }
     if (jobType !== undefined) allowedUpdates.jobType = String(jobType);
     if (remote !== undefined) allowedUpdates.remote = Boolean(remote);
     if (category !== undefined) allowedUpdates.category = String(category);

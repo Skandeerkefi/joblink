@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/auth/Login'
@@ -23,11 +24,12 @@ import AdminUsers from './pages/admin/AdminUsers'
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100">
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Routes>
+      <LanguageProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100">
+            <Navbar />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/" element={<Home />} />
@@ -146,10 +148,11 @@ function App() {
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
-      </AuthProvider>
+              </Routes>
+            </main>
+          </div>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   )
 }

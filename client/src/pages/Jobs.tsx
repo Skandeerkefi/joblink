@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { CATEGORIES, JOB_TYPES } from '../constants/categories'
+import { TUNISIA_GOVERNORATES } from '../constants/tunisiaGovernorates'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 interface Job {
   _id: string
@@ -37,6 +39,7 @@ const LIMIT = 10
 
 export default function Jobs() {
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -48,7 +51,6 @@ export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedJobType, setSelectedJobType] = useState('')
-  const [locationInput, setLocationInput] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [skillsInput, setSkillsInput] = useState('')
   const [skillsQuery, setSkillsQuery] = useState('')
@@ -100,7 +102,6 @@ export default function Jobs() {
     e.preventDefault()
     setPage(1)
     setSearchQuery(searchInput)
-    setLocationQuery(locationInput)
     setSkillsQuery(skillsInput)
   }
 
@@ -118,7 +119,6 @@ export default function Jobs() {
     setSelectedCategory('')
     setSearchInput('')
     setSearchQuery('')
-    setLocationInput('')
     setLocationQuery('')
     setSkillsInput('')
     setSkillsQuery('')
@@ -172,8 +172,8 @@ export default function Jobs() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Find Your Next Job</h1>
-        <p className="text-gray-500 dark:text-gray-400">Browse opportunities from top companies</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t.jobs.title}</h1>
+        <p className="text-gray-500 dark:text-gray-400">{t.jobs.subtitle}</p>
       </div>
 
       {/* Search + filters */}
@@ -183,28 +183,33 @@ export default function Jobs() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search jobs by title or description..."
+            placeholder={t.jobs.searchPlaceholder}
             className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
-          <input
-            type="text"
-            value={locationInput}
-            onChange={(e) => setLocationInput(e.target.value)}
-            placeholder="Location..."
-            className="w-full sm:w-40 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
+          <select
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            className="w-full sm:w-52 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="">{t.jobs.allGovernorates}</option>
+            {TUNISIA_GOVERNORATES.map((gov) => (
+              <option key={gov} value={gov}>
+                {gov}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             value={skillsInput}
             onChange={(e) => setSkillsInput(e.target.value)}
-            placeholder="Skills (e.g. React, Node)"
+            placeholder={t.jobs.skillsPlaceholder}
             className="w-full sm:w-48 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <button
             type="submit"
             className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap"
           >
-            Search
+            {t.jobs.search}
           </button>
         </form>
 
@@ -214,7 +219,7 @@ export default function Jobs() {
             onChange={(e) => handleCategoryChange(e.target.value)}
             className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            <option value="">All Categories</option>
+            <option value="">{t.jobs.allCategories}</option>
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
                 {cat.label}
@@ -227,7 +232,7 @@ export default function Jobs() {
             onChange={(e) => { setSelectedJobType(e.target.value); setPage(1) }}
             className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            <option value="">All Types</option>
+            <option value="">{t.jobs.allTypes}</option>
             {JOB_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
@@ -240,7 +245,7 @@ export default function Jobs() {
               onChange={(e) => { setRemoteOnly(e.target.checked); setPage(1) }}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            Remote only
+            {t.jobs.remoteOnly}
           </label>
 
           <select
@@ -259,7 +264,7 @@ export default function Jobs() {
               onClick={handleClearFilters}
               className="text-sm text-blue-600 hover:underline"
             >
-              Clear all filters
+              {t.jobs.clearAllFilters}
             </button>
           )}
           {total > 0 && (
@@ -284,9 +289,9 @@ export default function Jobs() {
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">No jobs found{hasActiveFilters ? ' matching your filters' : ''}.</p>
           {hasActiveFilters && (
-            <button onClick={handleClearFilters} className="text-blue-600 hover:underline mt-2 block mx-auto">
-              Clear filters
-            </button>
+              <button onClick={handleClearFilters} className="text-blue-600 hover:underline mt-2 block mx-auto">
+                {t.jobs.clearFilters}
+              </button>
           )}
         </div>
       ) : (

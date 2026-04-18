@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api/axios'
 import { CATEGORIES, JOB_TYPES } from '../../constants/categories'
+import { TUNISIA_GOVERNORATES } from '../../constants/tunisiaGovernorates'
+import { useLanguage } from '../../context/LanguageContext'
 
 interface JobFormData {
   title: string
@@ -17,6 +19,7 @@ export default function JobForm() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isEdit = !!id
+  const { t } = useLanguage()
 
   const [form, setForm] = useState<JobFormData>({
     title: '',
@@ -146,15 +149,23 @@ export default function JobForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.jobForm.location}</label>
+            <select
               name="location"
               value={form.location}
               onChange={handleChange}
               className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g. San Francisco, CA or Remote"
-            />
+            >
+              <option value="">{t.jobForm.selectGovernorate}</option>
+              {TUNISIA_GOVERNORATES.map((gov) => (
+                <option key={gov} value={gov}>
+                  {gov}
+                </option>
+              ))}
+              {form.location && !TUNISIA_GOVERNORATES.includes(form.location as (typeof TUNISIA_GOVERNORATES)[number]) && (
+                <option value={form.location}>{form.location}</option>
+              )}
+            </select>
           </div>
 
           <div>
@@ -166,7 +177,7 @@ export default function JobForm() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              Remote position
+              {t.jobForm.remotePosition}
             </label>
           </div>
 

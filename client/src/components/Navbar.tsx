@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -29,34 +31,34 @@ export default function Navbar() {
 
   const publicLinks = (
     <>
-      <NavLink to="/">Home</NavLink>
-      <NavLink to="/jobs">Jobs</NavLink>
+      <NavLink to="/">{t.nav.home}</NavLink>
+      <NavLink to="/jobs">{t.nav.jobs}</NavLink>
     </>
   )
 
   const candidateLinks = (
     <>
-      <NavLink to="/candidate/dashboard">Dashboard</NavLink>
-      <NavLink to="/jobs">Jobs</NavLink>
-      <NavLink to="/candidate/applications">My Applications</NavLink>
-      <NavLink to="/candidate/saved-jobs">Saved Jobs</NavLink>
-      <NavLink to="/candidate/resumes">My Resumes</NavLink>
-      <NavLink to="/candidate/ats-checker">ATS Checker</NavLink>
+      <NavLink to="/candidate/dashboard">{t.nav.dashboard}</NavLink>
+      <NavLink to="/jobs">{t.nav.jobs}</NavLink>
+      <NavLink to="/candidate/applications">{t.nav.myApplications}</NavLink>
+      <NavLink to="/candidate/saved-jobs">{t.nav.savedJobs}</NavLink>
+      <NavLink to="/candidate/resumes">{t.nav.myResumes}</NavLink>
+      <NavLink to="/candidate/ats-checker">{t.nav.atsChecker}</NavLink>
     </>
   )
 
   const recruiterLinks = (
     <>
-      <NavLink to="/recruiter/dashboard">Dashboard</NavLink>
-      <NavLink to="/recruiter/jobs">My Jobs</NavLink>
-      <NavLink to="/recruiter/applications">Applications</NavLink>
+      <NavLink to="/recruiter/dashboard">{t.nav.dashboard}</NavLink>
+      <NavLink to="/recruiter/jobs">{t.nav.myJobs}</NavLink>
+      <NavLink to="/recruiter/applications">{t.nav.applications}</NavLink>
     </>
   )
 
   const adminLinks = (
     <>
-      <NavLink to="/admin/users">Admin Users</NavLink>
-      <NavLink to="/jobs">Jobs</NavLink>
+      <NavLink to="/admin/users">{t.nav.adminUsers}</NavLink>
+      <NavLink to="/jobs">{t.nav.jobs}</NavLink>
     </>
   )
 
@@ -78,23 +80,32 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center space-x-5">
             {links}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'fr')}
+              className="text-sm px-2 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-black"
+              aria-label={t.nav.language}
+            >
+              <option value="en">EN</option>
+              <option value="fr">FR</option>
+            </select>
             <button
               onClick={toggleTheme}
               className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
             >
-              {theme === 'dark' ? '☀ Light' : '🌙 Dark'}
+              {theme === 'dark' ? t.nav.light : t.nav.dark}
             </button>
             {!user ? (
               <>
                 <Link to="/login" className={`${isActive('/login')} ml-2`} onClick={() => setMenuOpen(false)}>
-                  Login
+                  {t.nav.login}
                 </Link>
                 <Link
                   to="/register"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 font-medium"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Register
+                  {t.nav.register}
                 </Link>
               </>
             ) : (
@@ -104,7 +115,7 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="text-sm text-gray-700 dark:text-gray-300 hover:text-red-500 font-medium"
                 >
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             )}
@@ -132,23 +143,32 @@ export default function Navbar() {
         <div className="md:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
           <div className="flex flex-col px-4 py-3 space-y-3">
             {links}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'fr')}
+              className="text-left text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-black"
+              aria-label={t.nav.language}
+            >
+              <option value="en">EN</option>
+              <option value="fr">FR</option>
+            </select>
             <button
               onClick={toggleTheme}
               className="text-left text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2"
             >
-              {theme === 'dark' ? '☀ Switch to light' : '🌙 Switch to dark'}
+              {theme === 'dark' ? t.nav.switchToLight : t.nav.switchToDark}
             </button>
             {!user ? (
               <>
                 <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium" onClick={() => setMenuOpen(false)}>
-                  Login
+                  {t.nav.login}
                 </Link>
                 <Link
                   to="/register"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 font-medium text-center"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Register
+                  {t.nav.register}
                 </Link>
               </>
             ) : (
@@ -158,7 +178,7 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="text-left text-gray-700 dark:text-gray-300 hover:text-red-500 font-medium"
                 >
-                  Logout
+                  {t.nav.logout}
                 </button>
               </>
             )}

@@ -51,6 +51,7 @@ export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedJobType, setSelectedJobType] = useState('')
+  const [locationInput, setLocationInput] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [skillsInput, setSkillsInput] = useState('')
   const [skillsQuery, setSkillsQuery] = useState('')
@@ -102,6 +103,7 @@ export default function Jobs() {
     e.preventDefault()
     setPage(1)
     setSearchQuery(searchInput)
+    setLocationQuery(locationInput)
     setSkillsQuery(skillsInput)
   }
 
@@ -119,6 +121,7 @@ export default function Jobs() {
     setSelectedCategory('')
     setSearchInput('')
     setSearchQuery('')
+    setLocationInput('')
     setLocationQuery('')
     setSkillsInput('')
     setSkillsQuery('')
@@ -187,8 +190,8 @@ export default function Jobs() {
             className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <select
-            value={locationQuery}
-            onChange={(e) => setLocationQuery(e.target.value)}
+            value={locationInput}
+            onChange={(e) => setLocationInput(e.target.value)}
             className="w-full sm:w-52 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="">{t.jobs.allGovernorates}</option>
@@ -233,8 +236,8 @@ export default function Jobs() {
             className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="">{t.jobs.allTypes}</option>
-            {JOB_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            {JOB_TYPES.map((jobTypeOption) => (
+              <option key={jobTypeOption.value} value={jobTypeOption.value}>{jobTypeOption.label}</option>
             ))}
           </select>
 

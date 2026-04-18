@@ -25,7 +25,7 @@ const TUNISIA_GOVERNORATES = [
   'Zaghouan',
 ];
 
-const normalize = (value) => String(value).trim().toLocaleLowerCase();
+const normalize = (value) => String(value).trim().toLowerCase();
 
 const GOVERNORATE_MAP = new Map(
   TUNISIA_GOVERNORATES.map((name) => [normalize(name), name])

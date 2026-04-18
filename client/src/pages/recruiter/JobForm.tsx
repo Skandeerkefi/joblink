@@ -33,6 +33,7 @@ export default function JobForm() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(isEdit)
   const [error, setError] = useState('')
+  const hasLegacyLocation = Boolean(form.location && !TUNISIA_GOVERNORATES.some((gov) => gov === form.location))
 
   useEffect(() => {
     if (isEdit) {
@@ -162,8 +163,8 @@ export default function JobForm() {
                   {gov}
                 </option>
               ))}
-              {form.location && !TUNISIA_GOVERNORATES.includes(form.location as (typeof TUNISIA_GOVERNORATES)[number]) && (
-                <option value={form.location}>{form.location}</option>
+              {hasLegacyLocation && (
+                <option value={form.location}>{form.location} (Legacy value)</option>
               )}
             </select>
           </div>

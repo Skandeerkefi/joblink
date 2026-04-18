@@ -22,6 +22,13 @@ export const JOB_TYPES = [
   { value: 'REMOTE', label: 'Remote' },
 ]
 
+export const EXPERIENCE_LEVELS = [
+  { value: 'DEBUTANT', label: 'Débutant' },
+  { value: 'JUNIOR', label: 'Junior' },
+  { value: 'INTERMEDIATE', label: 'Intermediate' },
+  { value: 'SENIOR', label: 'Senior' },
+]
+
 export const APPLICATION_STATUSES = [
   { value: 'APPLIED', label: 'Applied' },
   { value: 'VIEWED', label: 'Viewed' },

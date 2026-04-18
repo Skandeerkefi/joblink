@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
-import { CATEGORIES, JOB_TYPES } from '../../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../../constants/categories'
 
 interface SavedJobEntry {
   _id: string
@@ -11,6 +11,7 @@ interface SavedJobEntry {
     description: string
     location: string
     jobType: string
+    experienceLevel: string
     remote: boolean
     category: string
     skills: string[]
@@ -89,6 +90,8 @@ export default function SavedJobs() {
 
   const getCategoryLabel = (value: string) => CATEGORIES.find((c) => c.value === value)?.label || value
   const getJobTypeLabel = (value: string) => JOB_TYPES.find((t) => t.value === value)?.label || value.replace(/_/g, ' ')
+  const getExperienceLevelLabel = (value: string) =>
+    EXPERIENCE_LEVELS.find((level) => level.value === value)?.label || value
 
   return (
     <div>
@@ -154,6 +157,9 @@ export default function SavedJobs() {
                         </span>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                           {getJobTypeLabel(job.jobType)}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                          {getExperienceLevelLabel(job.experienceLevel || 'JUNIOR')}
                         </span>
                         {job.skills.slice(0, 3).map((skill) => (
                           <span

@@ -62,9 +62,9 @@ interface Application {
   status: string
   coverLetter?: string
   atsScore?: number
-  atsBreakdown?: Record<string, number | string>
+  atsBreakdown?: Record<string, number | string | string[]>
   matchScore?: number
-  matchBreakdown?: Record<string, number | string>
+  matchBreakdown?: Record<string, number | string | string[]>
   createdAt: string
 }
 
@@ -88,9 +88,11 @@ const ATS_MAX_POINTS: Record<string, number> = {
 }
 
 const MATCH_MAX_POINTS: Record<string, number> = {
-  skillScore: 70,
-  keywordScore: 25,
-  categoryBonus: 5,
+  skillsMatch: 100,
+  experienceMatch: 100,
+  educationMatch: 100,
+  keywordsToolsMatch: 100,
+  bonus: 100,
 }
 
 const BREAKDOWN_LABELS: Record<string, string> = {
@@ -105,9 +107,11 @@ const BREAKDOWN_LABELS: Record<string, string> = {
   education: 'Education',
   projects: 'Projects',
   certifications: 'Certifications',
-  skillScore: 'Skill fit',
-  keywordScore: 'Keyword fit',
-  categoryBonus: 'Category bonus',
+  skillsMatch: 'Skills match',
+  experienceMatch: 'Experience match',
+  educationMatch: 'Education match',
+  keywordsToolsMatch: 'Keywords/tools match',
+  bonus: 'Bonus',
 }
 
 const scoreToTen = (value: number, max: number) => {
@@ -117,7 +121,7 @@ const scoreToTen = (value: number, max: number) => {
 }
 
 const formatScoreDetails = (
-  breakdown: Record<string, number | string> | undefined,
+  breakdown: Record<string, number | string | string[]> | undefined,
   maxMap: Record<string, number>
 ) => {
   if (!breakdown) return []
@@ -346,7 +350,8 @@ export default function RecruiterApplications() {
                     {group.applications.map((app) => {
                       const atsDetails = formatScoreDetails(app.atsBreakdown, ATS_MAX_POINTS)
                       const matchDetails = formatScoreDetails(app.matchBreakdown, MATCH_MAX_POINTS)
-                      const matchedSkills = app.matchBreakdown?.matchedSkills
+                      const matchedSkills =
+                        app.matchBreakdown?.matchedRequiredSkills ?? app.matchBreakdown?.matchedSkills
                       const requiredSkills = app.matchBreakdown?.requiredSkills
                       const hasSkillMatchCounts =
                         typeof matchedSkills === 'number' && typeof requiredSkills === 'number'

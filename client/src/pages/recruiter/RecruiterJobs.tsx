@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
-import { CATEGORIES, JOB_TYPES } from '../../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../../constants/categories'
 
 interface Job {
   _id: string
   title: string
   location: string
   jobType: string
+  experienceLevel: string
   category: string
   isActive: boolean
   createdAt: string
@@ -49,6 +50,8 @@ export default function RecruiterJobs() {
 
   const getCategoryLabel = (value: string) => CATEGORIES.find((c) => c.value === value)?.label || value
   const getJobTypeLabel = (value: string) => JOB_TYPES.find((t) => t.value === value)?.label || value
+  const getExperienceLevelLabel = (value: string) =>
+    EXPERIENCE_LEVELS.find((level) => level.value === value)?.label || value
 
   if (loading) {
     return (
@@ -91,6 +94,7 @@ export default function RecruiterJobs() {
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Title</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Category</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Type</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Level</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Location</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Posted</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Actions</th>
@@ -102,6 +106,7 @@ export default function RecruiterJobs() {
                   <td className="px-6 py-4 font-medium text-gray-900">{job.title}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{getCategoryLabel(job.category)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{getJobTypeLabel(job.jobType)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{getExperienceLevelLabel(job.experienceLevel || 'JUNIOR')}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{job.location || '—'}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(job.createdAt).toLocaleDateString()}

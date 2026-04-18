@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
-import { CATEGORIES, JOB_TYPES } from '../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../constants/categories'
 
 interface Job {
   _id: string
@@ -11,6 +11,7 @@ interface Job {
   description: string
   location: string
   jobType: string
+  experienceLevel: string
   remote: boolean
   category: string
   skills: string[]
@@ -193,6 +194,7 @@ export default function JobDetail() {
 
   const categoryLabel = CATEGORIES.find((c) => c.value === job.category)?.label || job.category
   const jobTypeLabel = JOB_TYPES.find((t) => t.value === job.jobType)?.label || job.jobType
+  const experienceLabel = EXPERIENCE_LEVELS.find((level) => level.value === job.experienceLevel)?.label || job.experienceLevel
 
   return (
     <div className="max-w-3xl">
@@ -236,6 +238,9 @@ export default function JobDetail() {
             </span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
               {jobTypeLabel}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700">
+              {experienceLabel}
             </span>
           </div>
         </div>

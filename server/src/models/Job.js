@@ -10,6 +10,11 @@ const jobSchema = new mongoose.Schema({
     enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'REMOTE'],
     default: 'FULL_TIME',
   },
+  experienceLevel: {
+    type: String,
+    enum: ['DEBUTANT', 'JUNIOR', 'INTERMEDIATE', 'SENIOR'],
+    default: 'JUNIOR',
+  },
   remote: { type: Boolean, default: false },
   category: {
     type: String,
@@ -31,6 +36,7 @@ jobSchema.index({ title: 'text', description: 'text' });
 jobSchema.index({ category: 1 });
 jobSchema.index({ location: 1 });
 jobSchema.index({ jobType: 1 });
+jobSchema.index({ experienceLevel: 1 });
 jobSchema.index({ remote: 1 });
 jobSchema.index({ isActive: 1, createdAt: -1 });
 

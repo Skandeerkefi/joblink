@@ -10,10 +10,11 @@ interface JobOption {
 
 interface Analysis {
   atsScore: number
-  atsBreakdown: Record<string, number | string>
+  atsBreakdown: Record<string, number | string | string[]>
   matchScore: number | null
-  matchBreakdown: Record<string, number | string> | null
+  matchBreakdown: Record<string, number | string | string[]> | null
 }
+const MATCH_METADATA_KEYS = new Set(['tips', 'missingRequiredSkills', 'missingTools', 'formula'])
 
 export default function AtsChecker() {
   const [resumes, setResumes] = useState<Resume[]>([])
@@ -151,8 +152,10 @@ export default function AtsChecker() {
             <h2 className="text-lg font-semibold mb-3">Match Result</h2>
             <div className="text-3xl font-bold text-indigo-600 mb-4">{analysis.matchScore ?? '—'}{analysis.matchScore !== null ? '/100' : ''}</div>
             {analysis.matchBreakdown ? (
-              <div className="space-y-2 text-sm">
-                {Object.entries(analysis.matchBreakdown).map(([k, v]) => (
+              <div className="space-y-2 text-sm mb-4">
+                {Object.entries(analysis.matchBreakdown)
+                  .filter(([k]) => !MATCH_METADATA_KEYS.has(k))
+                  .map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-1">
                     <span className="capitalize text-gray-600 dark:text-gray-300">{k.replace(/([A-Z])/g, ' $1')}</span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">{String(v)}</span>
@@ -161,6 +164,24 @@ export default function AtsChecker() {
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">Select a job to see detailed match analysis.</p>
+            )}
+
+            {analysis.matchBreakdown?.formula && (
+              <div className="mt-3 rounded-lg border border-indigo-100 dark:border-indigo-900 bg-indigo-50/70 dark:bg-indigo-950/30 p-3">
+                <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Scoring Formula</p>
+                <p className="text-xs text-indigo-700 dark:text-indigo-200">{String(analysis.matchBreakdown.formula)}</p>
+              </div>
+            )}
+
+            {Array.isArray(analysis.matchBreakdown?.tips) && analysis.matchBreakdown.tips.length > 0 && (
+              <div className="mt-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">How to improve your match</p>
+                <ul className="list-disc list-inside space-y-1 text-xs text-amber-900 dark:text-amber-100">
+                  {analysis.matchBreakdown.tips.map((tip, idx) => (
+                    <li key={idx}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>

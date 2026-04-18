@@ -44,18 +44,10 @@ This creates test accounts:
 - Candidate: `test@candidate.com` / `password123`
 - Recruiter: `test@recruiter.com` / `password123`
 
-## Deploy to Vercel (frontend + backend in one project)
+## Deploy to Vercel
 
-This repository includes a root `vercel.json` that:
-- serves the React app from `client/dist`
-- runs Express API from `api/index.js`
-- routes `/api/*` and `/uploads/*` to the backend
-- uses SPA fallback routing to `index.html`
-
-Set these environment variables in Vercel:
-- `MONGO_URI`
-- `JWT_SECRET`
-- `CLIENT_URL` (your deployed frontend URL; comma-separated list is supported)
+This repository includes a root `vercel.json` with SPA fallback rewrites:
+- rewrites all routes to `/`
 
 ## Tech Stack
 

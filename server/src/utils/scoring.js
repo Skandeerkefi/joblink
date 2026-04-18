@@ -404,7 +404,7 @@ const calculateMatchScore = (resume, job) => {
     tips.push(`Add evidence for these required skills: ${missingRequiredSkills.slice(0, 5).join(', ')}`);
   }
   if (candidateYears < requiredYears) {
-    tips.push(`Highlight projects or internships proving ${requiredYears}+ years equivalent experience.`);
+    tips.push(`Highlight projects or internships that demonstrate ${requiredYears}+ years of equivalent experience.`);
   }
   if (educationMatch < 100) {
     tips.push('Clarify your education relevance and add coursework or certifications aligned with this role.');

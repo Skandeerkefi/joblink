@@ -123,15 +123,38 @@ const VALID_STATUSES = ['APPLIED', 'VIEWED', 'INTERVIEW', 'REJECTED', 'HIRED'];
 
 router.patch('/:id/status', protect, authorize('recruiter'), async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { status, interviewAt } = req.body;
     if (!status || !VALID_STATUSES.includes(status)) {
       return res.status(400).json({ success: false, message: `Status must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+    let parsedInterviewAt = null;
+    if (status === 'INTERVIEW') {
+      if (!interviewAt) {
+        return res.status(400).json({ success: false, message: 'interviewAt is required for INTERVIEW status' });
+      }
+      parsedInterviewAt = new Date(interviewAt);
+      if (Number.isNaN(parsedInterviewAt.getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid interviewAt date-time' });
+      }
     }
     const application = await Application.findById(req.params.id).populate('job');
     if (!application) return res.status(404).json({ success: false, message: 'Application not found' });
     if (application.job.recruiter.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
+
+    if (status === 'INTERVIEW' && parsedInterviewAt) {
+      const interviewDateText = parsedInterviewAt.toLocaleString();
+      const jobTitle = application.job?.title || 'the selected position';
+      application.interviewAt = parsedInterviewAt;
+      application.notifications = application.notifications || [];
+      application.notifications.push({
+        message: `Interview scheduled for "${jobTitle}" on ${interviewDateText}.`,
+      });
+    } else if (status !== 'INTERVIEW') {
+      application.interviewAt = undefined;
+    }
+
     application.status = status;
     await application.save();
     res.json({ success: true, application });

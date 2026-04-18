@@ -65,6 +65,7 @@ interface Application {
   atsBreakdown?: Record<string, number | string | string[]>
   matchScore?: number
   matchBreakdown?: Record<string, number | string | string[]>
+  interviewAt?: string
   createdAt: string
 }
 
@@ -208,17 +209,42 @@ export default function RecruiterApplications() {
     }))
   }, [filtered])
 
-  const changeStatus = async (id: string, status: string) => {
+  const changeStatus = async (id: string, status: string, interviewAt?: string) => {
     setUpdatingId(id)
     setError('')
     try {
-      await api.patch(`/applications/${id}/status`, { status })
-      setApplications((prev) => prev.map((a) => (a._id === id ? { ...a, status } : a)))
+      await api.patch(`/applications/${id}/status`, { status, interviewAt })
+      setApplications((prev) =>
+        prev.map((a) =>
+          a._id === id
+            ? { ...a, status, interviewAt: status === 'INTERVIEW' ? interviewAt || a.interviewAt : undefined }
+            : a
+        )
+      )
     } catch {
       setError('Failed to update status')
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const handleStatusChange = async (app: Application, status: string) => {
+    if (status !== 'INTERVIEW') {
+      await changeStatus(app._id, status)
+      return
+    }
+
+    const defaultValue = app.interviewAt ? new Date(app.interviewAt).toISOString().slice(0, 16) : ''
+    const value = window.prompt('Enter interview date and time (YYYY-MM-DDTHH:mm)', defaultValue)
+    if (!value) return
+
+    const interviewDate = new Date(value)
+    if (Number.isNaN(interviewDate.getTime())) {
+      setError('Invalid interview date/time')
+      return
+    }
+
+    await changeStatus(app._id, status, interviewDate.toISOString())
   }
 
   const manualSkills = (selectedManualApplication?.resume?.manualData?.skills || []).filter(Boolean)
@@ -342,6 +368,7 @@ export default function RecruiterApplications() {
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">ATS</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Match</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Status</th>
+                      <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Interview</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">CV</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Applied</th>
                     </tr>
@@ -380,17 +407,20 @@ export default function RecruiterApplications() {
                           </td>
                           <td className="px-4 py-3 align-top">
                             <select
-                              value={app.status}
-                              disabled={updatingId === app._id}
-                              onChange={(e) => changeStatus(app._id, e.target.value)}
-                              className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
-                            >
+                               value={app.status}
+                               disabled={updatingId === app._id}
+                               onChange={(e) => handleStatusChange(app, e.target.value)}
+                               className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
+                             >
                               {APPLICATION_STATUSES.map((s) => (
                                 <option key={s.value} value={s.value}>
                                   {s.label}
                                 </option>
                               ))}
                             </select>
+                          </td>
+                          <td className="px-4 py-3 align-top text-sm text-gray-500">
+                            {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
                           </td>
                           <td className="px-4 py-3 align-top">
                             {app.resume?.fileUrl ? (
@@ -454,6 +484,12 @@ export default function RecruiterApplications() {
                             <div className="text-xs text-gray-500 mt-0.5">{matchDetails.join(' • ')}</div>
                           )}
                         </div>
+                        <div>
+                          Interview:{' '}
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
+                          </span>
+                        </div>
                         {app.resume?.fileUrl ? (
                           <a
                             href={`${API_BASE_URL}${app.resume.fileUrl}`}
@@ -482,7 +518,7 @@ export default function RecruiterApplications() {
                         <select
                           value={app.status}
                           disabled={updatingId === app._id}
-                          onChange={(e) => changeStatus(app._id, e.target.value)}
+                          onChange={(e) => handleStatusChange(app, e.target.value)}
                           className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                         >
                           {APPLICATION_STATUSES.map((s) => (

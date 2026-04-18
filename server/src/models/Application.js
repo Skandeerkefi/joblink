@@ -14,6 +14,13 @@ const applicationSchema = new mongoose.Schema({
   atsBreakdown: { type: mongoose.Schema.Types.Mixed },
   matchScore: { type: Number, min: 0, max: 100 },
   matchBreakdown: { type: mongoose.Schema.Types.Mixed },
+  interviewAt: { type: Date },
+  notifications: [
+    {
+      message: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

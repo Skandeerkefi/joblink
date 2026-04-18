@@ -19,6 +19,11 @@ interface Application {
   coverLetter?: string
   atsScore?: number
   matchScore?: number
+  interviewAt?: string
+  notifications?: Array<{
+    message: string
+    createdAt: string
+  }>
   createdAt: string
 }
 
@@ -89,12 +94,19 @@ export default function MyApplications() {
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Applied</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">ATS</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Match</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {applications.map((app) => (
-                <tr key={app._id} className="hover:bg-gray-50">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Status</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Interview</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Notification</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {applications.map((app) => {
+                  const latestNotification =
+                    app.notifications && app.notifications.length > 0
+                      ? app.notifications[app.notifications.length - 1]
+                      : null
+                  return (
+                    <tr key={app._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <a
                       href={`/jobs/${app.job?._id}`}
@@ -130,10 +142,26 @@ export default function MyApplications() {
                       {getStatusLabel(app.status)}
                     </span>
                   </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    {latestNotification ? (
+                      <div>
+                        <div>{latestNotification.message}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(latestNotification.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
         </div>
       )}
     </div>

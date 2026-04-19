@@ -6,7 +6,10 @@ import { useLanguage } from '../context/LanguageContext'
 import api from '../api/axios'
 
 type CandidateApplication = {
-  notifications?: unknown[]
+  notifications?: Array<{
+    message: string
+    createdAt: string
+  }>
 }
 
 export default function Navbar() {
@@ -38,7 +41,9 @@ export default function Navbar() {
     }
 
     fetchNotificationCount()
-  }, [user?.id, user?.role])
+    const interval = setInterval(fetchNotificationCount, 60000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogout = () => {
     logout()

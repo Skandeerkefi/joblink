@@ -5,6 +5,10 @@ import { useTheme } from '../context/ThemeContext'
 import { useLanguage } from '../context/LanguageContext'
 import api from '../api/axios'
 
+type CandidateApplication = {
+  notifications?: unknown[]
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -24,7 +28,7 @@ export default function Navbar() {
       try {
         const res = await api.get('/applications/mine')
         const applications = Array.isArray(res.data?.applications) ? res.data.applications : []
-        const totalNotifications = applications.reduce((sum: number, app: { notifications?: unknown[] }) => {
+        const totalNotifications = applications.reduce((sum: number, app: CandidateApplication) => {
           return sum + (Array.isArray(app.notifications) ? app.notifications.length : 0)
         }, 0)
         setNotificationCount(totalNotifications)
@@ -34,7 +38,7 @@ export default function Navbar() {
     }
 
     fetchNotificationCount()
-  }, [user, location.pathname])
+  }, [user?.id, user?.role])
 
   const handleLogout = () => {
     logout()

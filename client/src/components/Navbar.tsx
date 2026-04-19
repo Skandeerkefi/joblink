@@ -83,7 +83,6 @@ export default function Navbar() {
               title={`${notificationCount} notifications`}
             >
               <span aria-hidden="true">🔔</span>
-              <span className="sr-only">{notificationCount} notifications</span>
               {notificationCount > 99 ? '99+' : notificationCount}
             </span>
           )}

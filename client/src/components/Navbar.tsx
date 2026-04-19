@@ -164,7 +164,7 @@ export default function Navbar() {
               setMenuOpen(false)
             }}
           >
-            View my applications
+            My Applications
           </Link>
         </div>
       )}

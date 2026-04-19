@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useLanguage } from '../context/LanguageContext'
+import api from '../api/axios'
+
+type CandidateApplication = {
+  notifications?: Array<{
+    message: string
+    createdAt: string
+  }>
+}
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -11,6 +19,31 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(0)
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (!user || user.role !== 'candidate') {
+        setNotificationCount(0)
+        return
+      }
+
+      try {
+        const res = await api.get('/applications/mine')
+        const applications = Array.isArray(res.data?.applications) ? res.data.applications : []
+        const totalNotifications = applications.reduce((sum: number, app: CandidateApplication) => {
+          return sum + (Array.isArray(app.notifications) ? app.notifications.length : 0)
+        }, 0)
+        setNotificationCount(totalNotifications)
+      } catch {
+        setNotificationCount(0)
+      }
+    }
+
+    fetchNotificationCount()
+    const interval = setInterval(fetchNotificationCount, 120000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogout = () => {
     logout()
@@ -40,7 +73,21 @@ export default function Navbar() {
     <>
       <NavLink to="/candidate/dashboard">{t.nav.dashboard}</NavLink>
       <NavLink to="/jobs">{t.nav.jobs}</NavLink>
-      <NavLink to="/candidate/applications">{t.nav.myApplications}</NavLink>
+      <NavLink to="/candidate/applications">
+        <span className="inline-flex items-center gap-1.5">
+          {t.nav.myApplications}
+          {notificationCount > 0 && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-red-500 text-white text-[10px] px-2 py-0.5 leading-none"
+              aria-label={`${notificationCount} notifications`}
+              title={`${notificationCount} notifications`}
+            >
+              <span aria-hidden="true">🔔</span>
+              {notificationCount > 99 ? '99+' : notificationCount}
+            </span>
+          )}
+        </span>
+      </NavLink>
       <NavLink to="/candidate/saved-jobs">{t.nav.savedJobs}</NavLink>
       <NavLink to="/candidate/resumes">{t.nav.myResumes}</NavLink>
       <NavLink to="/candidate/ats-checker">{t.nav.atsChecker}</NavLink>

@@ -65,6 +65,7 @@ interface Application {
   atsBreakdown?: Record<string, number | string | string[]>
   matchScore?: number
   matchBreakdown?: Record<string, number | string | string[]>
+  interviewAt?: string
   createdAt: string
 }
 
@@ -142,11 +143,22 @@ const sortByMatchThenDate = (a: Application, b: Application) => {
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 }
 
+const DATETIME_LOCAL_LENGTH = 16
+
+const toDatetimeLocalValue = (dateTime?: string) => {
+  if (!dateTime) return ''
+  const date = new Date(dateTime)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, DATETIME_LOCAL_LENGTH)
+}
+
 export default function RecruiterApplications() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedManualApplication, setSelectedManualApplication] = useState<Application | null>(null)
+  const [interviewScheduleTarget, setInterviewScheduleTarget] = useState<Application | null>(null)
+  const [interviewDateTimeInput, setInterviewDateTimeInput] = useState('')
 
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [minAts, setMinAts] = useState('')
@@ -175,6 +187,15 @@ export default function RecruiterApplications() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedManualApplication])
+
+  useEffect(() => {
+    if (!interviewScheduleTarget) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setInterviewScheduleTarget(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [interviewScheduleTarget])
 
   const filtered = useMemo(() => {
     const parseThreshold = (value: string) => {
@@ -208,17 +229,49 @@ export default function RecruiterApplications() {
     }))
   }, [filtered])
 
-  const changeStatus = async (id: string, status: string) => {
+  const changeStatus = async (id: string, status: string, interviewAt?: string) => {
     setUpdatingId(id)
     setError('')
     try {
-      await api.patch(`/applications/${id}/status`, { status })
-      setApplications((prev) => prev.map((a) => (a._id === id ? { ...a, status } : a)))
+      await api.patch(`/applications/${id}/status`, { status, interviewAt })
+      setApplications((prev) =>
+        prev.map((a) =>
+          a._id === id
+            ? { ...a, status, interviewAt: status === 'INTERVIEW' ? interviewAt || a.interviewAt : undefined }
+            : a
+        )
+      )
     } catch {
       setError('Failed to update status')
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const handleStatusChange = async (app: Application, status: string) => {
+    if (status !== 'INTERVIEW') {
+      await changeStatus(app._id, status)
+      return
+    }
+
+    setInterviewScheduleTarget(app)
+    setInterviewDateTimeInput(toDatetimeLocalValue(app.interviewAt))
+  }
+
+  const scheduleInterview = async () => {
+    if (!interviewScheduleTarget) return
+    if (!interviewDateTimeInput) {
+      setError('Please choose an interview date/time')
+      return
+    }
+    const interviewDate = new Date(interviewDateTimeInput)
+    if (Number.isNaN(interviewDate.getTime())) {
+      setError('Invalid interview date/time')
+      return
+    }
+    await changeStatus(interviewScheduleTarget._id, 'INTERVIEW', interviewDate.toISOString())
+    setInterviewScheduleTarget(null)
+    setInterviewDateTimeInput('')
   }
 
   const manualSkills = (selectedManualApplication?.resume?.manualData?.skills || []).filter(Boolean)
@@ -342,6 +395,7 @@ export default function RecruiterApplications() {
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">ATS</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Match</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Status</th>
+                      <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Interview</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">CV</th>
                       <th className="text-left px-4 py-3 text-xs uppercase text-gray-500">Applied</th>
                     </tr>
@@ -380,17 +434,20 @@ export default function RecruiterApplications() {
                           </td>
                           <td className="px-4 py-3 align-top">
                             <select
-                              value={app.status}
-                              disabled={updatingId === app._id}
-                              onChange={(e) => changeStatus(app._id, e.target.value)}
-                              className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
-                            >
+                               value={app.status}
+                               disabled={updatingId === app._id}
+                               onChange={(e) => handleStatusChange(app, e.target.value)}
+                               className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
+                             >
                               {APPLICATION_STATUSES.map((s) => (
                                 <option key={s.value} value={s.value}>
                                   {s.label}
                                 </option>
                               ))}
                             </select>
+                          </td>
+                          <td className="px-4 py-3 align-top text-sm text-gray-500">
+                            {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
                           </td>
                           <td className="px-4 py-3 align-top">
                             {app.resume?.fileUrl ? (
@@ -454,6 +511,12 @@ export default function RecruiterApplications() {
                             <div className="text-xs text-gray-500 mt-0.5">{matchDetails.join(' • ')}</div>
                           )}
                         </div>
+                        <div>
+                          Interview:{' '}
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
+                          </span>
+                        </div>
                         {app.resume?.fileUrl ? (
                           <a
                             href={`${API_BASE_URL}${app.resume.fileUrl}`}
@@ -482,7 +545,7 @@ export default function RecruiterApplications() {
                         <select
                           value={app.status}
                           disabled={updatingId === app._id}
-                          onChange={(e) => changeStatus(app._id, e.target.value)}
+                          onChange={(e) => handleStatusChange(app, e.target.value)}
                           className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm"
                         >
                           {APPLICATION_STATUSES.map((s) => (
@@ -499,6 +562,56 @@ export default function RecruiterApplications() {
               </div>
             </section>
           ))}
+        </div>
+      )}
+
+      {interviewScheduleTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={(event) => {
+            if (event.currentTarget === event.target) setInterviewScheduleTarget(null)
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="interview-scheduler-title"
+            className="bg-white dark:bg-gray-950 w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+          >
+            <h3 id="interview-scheduler-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Schedule interview
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {interviewScheduleTarget.candidate?.name} • {interviewScheduleTarget.job?.title}
+            </p>
+            <label htmlFor="interview-datetime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Interview date & time
+            </label>
+            <input
+              id="interview-datetime"
+              type="datetime-local"
+              value={interviewDateTimeInput}
+              onChange={(event) => setInterviewDateTimeInput(event.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setInterviewScheduleTarget(null)}
+                className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={scheduleInterview}
+                disabled={updatingId === interviewScheduleTarget._id}
+                className="bg-blue-600 text-white rounded-lg px-3 py-2 text-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

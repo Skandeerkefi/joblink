@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import Navbar from './components/Navbar'
@@ -21,6 +21,16 @@ import RecruiterApplications from './pages/recruiter/RecruiterApplications'
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 
+function DashboardRedirect() {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) return null
+  if (!user) return <Home />
+  if (user.role === 'admin') return <Navigate to="/admin/users" replace />
+  if (user.role === 'recruiter') return <Navigate to="/recruiter/dashboard" replace />
+  return <Navigate to="/candidate/dashboard" replace />
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -32,7 +42,7 @@ function App() {
               <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<DashboardRedirect />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
 

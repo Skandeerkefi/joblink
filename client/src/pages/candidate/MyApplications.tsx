@@ -19,6 +19,11 @@ interface Application {
   coverLetter?: string
   atsScore?: number
   matchScore?: number
+  interviewAt?: string
+  notifications?: Array<{
+    message: string
+    createdAt: string
+  }>
   createdAt: string
 }
 
@@ -51,6 +56,11 @@ export default function MyApplications() {
 
   const getStatusLabel = (value: string) => {
     return APPLICATION_STATUSES.find((s) => s.value === value)?.label || value
+  }
+
+  const getLatestNotification = (app: Application) => {
+    if (!app.notifications || app.notifications.length === 0) return null
+    return app.notifications[app.notifications.length - 1]
   }
 
   if (loading) {
@@ -90,48 +100,68 @@ export default function MyApplications() {
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">ATS</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Match</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Status</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Interview</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Notification</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {applications.map((app) => (
-                <tr key={app._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <a
-                      href={`/jobs/${app.job?._id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
-                    >
-                      {app.job?.title || 'N/A'}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{app.job?.location || '—'}</td>
-                  <td className="px-6 py-4 text-sm">
-                    {app.resume ? (
+              {applications.map((app) => {
+                const latestNotification = getLatestNotification(app)
+                return (
+                  <tr key={app._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
                       <a
-                        href={`${API_BASE_URL}${app.resume.fileUrl}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline"
+                        href={`/jobs/${app.job?._id}`}
+                        className="font-medium text-gray-900 hover:text-blue-600"
                       >
-                        {app.resume.originalName}
+                        {app.job?.title || 'N/A'}
                       </a>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(app.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{app.atsScore ?? '—'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{app.matchScore ?? '—'}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[app.status] || 'bg-gray-100 text-gray-700'}`}
-                    >
-                      {getStatusLabel(app.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{app.job?.location || '—'}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {app.resume ? (
+                        <a
+                          href={`${API_BASE_URL}${app.resume.fileUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {app.resume.originalName}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(app.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{app.atsScore ?? '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{app.matchScore ?? '—'}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[app.status] || 'bg-gray-100 text-gray-700'}`}
+                      >
+                        {getStatusLabel(app.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {app.interviewAt ? new Date(app.interviewAt).toLocaleString() : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                      {latestNotification ? (
+                        <div>
+                          <div>{latestNotification.message}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(latestNotification.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -6,10 +6,23 @@ import { useLanguage } from '../context/LanguageContext'
 import api from '../api/axios'
 
 type CandidateApplication = {
+  _id: string
+  job?: {
+    title?: string
+  }
+  interviewAt?: string
   notifications?: Array<{
     message: string
     createdAt: string
   }>
+}
+
+type CandidateNotificationItem = {
+  id: string
+  message: string
+  createdAt: string
+  jobTitle: string
+  interviewAt?: string
 }
 
 export default function Navbar() {
@@ -20,30 +33,69 @@ export default function Navbar() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false)
+  const [notificationItems, setNotificationItems] = useState<CandidateNotificationItem[]>([])
+  const notificationMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    const fetchNotificationCount = async () => {
+    const fetchNotifications = async () => {
       if (!user || user.role !== 'candidate') {
         setNotificationCount(0)
+        setNotificationItems([])
         return
       }
 
       try {
         const res = await api.get('/applications/mine')
         const applications = Array.isArray(res.data?.applications) ? res.data.applications : []
+
+        const notifications = applications.flatMap((app: CandidateApplication) => {
+          const appNotifications = Array.isArray(app.notifications) ? app.notifications : []
+          const jobTitle = app.job?.title || 'Job application'
+          return appNotifications.map((notification, index) => ({
+            id: `${app._id}-${notification.createdAt}-${index}`,
+            message: notification.message,
+            createdAt: notification.createdAt,
+            jobTitle,
+            interviewAt: app.interviewAt,
+          }))
+        })
+        notifications.sort((a: CandidateNotificationItem, b: CandidateNotificationItem) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+
         const totalNotifications = applications.reduce((sum: number, app: CandidateApplication) => {
           return sum + (Array.isArray(app.notifications) ? app.notifications.length : 0)
         }, 0)
+
+        setNotificationItems(notifications)
         setNotificationCount(totalNotifications)
       } catch {
         setNotificationCount(0)
+        setNotificationItems([])
       }
     }
 
-    fetchNotificationCount()
-    const interval = setInterval(fetchNotificationCount, 120000)
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 120000)
     return () => clearInterval(interval)
   }, [user])
+
+  useEffect(() => {
+    setNotificationMenuOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(target)) {
+        setNotificationMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -62,6 +114,63 @@ export default function Navbar() {
     </Link>
   )
 
+  const candidateNotificationButton = user?.role === 'candidate' && (
+    <div className="relative" ref={notificationMenuRef}>
+      <button
+        type="button"
+        onClick={() => setNotificationMenuOpen((prev) => !prev)}
+        className="relative p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
+        aria-label={`Notifications (${notificationCount})`}
+        title={`${notificationCount} notifications`}
+      >
+        <span aria-hidden="true">🔔</span>
+        {notificationCount > 0 && (
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] px-1">
+            {notificationCount > 99 ? '99+' : notificationCount}
+          </span>
+        )}
+      </button>
+
+      {notificationMenuOpen && (
+        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-30">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</p>
+          </div>
+
+          {notificationItems.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">No notifications yet.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+              {notificationItems.map((notification) => (
+                <li key={notification.id} className="px-4 py-3">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{notification.jobTitle}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-200 mt-1">{notification.message}</p>
+                  {notification.interviewAt && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Interview: {new Date(notification.interviewAt).toLocaleString()}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">{new Date(notification.createdAt).toLocaleString()}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Link
+            to="/candidate/applications"
+            className="block px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
+            onClick={() => {
+              setNotificationMenuOpen(false)
+              setMenuOpen(false)
+            }}
+          >
+            My Applications
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+
   const publicLinks = (
     <>
       <NavLink to="/">{t.nav.home}</NavLink>
@@ -73,21 +182,7 @@ export default function Navbar() {
     <>
       <NavLink to="/candidate/dashboard">{t.nav.dashboard}</NavLink>
       <NavLink to="/jobs">{t.nav.jobs}</NavLink>
-      <NavLink to="/candidate/applications">
-        <span className="inline-flex items-center gap-1.5">
-          {t.nav.myApplications}
-          {notificationCount > 0 && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-red-500 text-white text-[10px] px-2 py-0.5 leading-none"
-              aria-label={`${notificationCount} notifications`}
-              title={`${notificationCount} notifications`}
-            >
-              <span aria-hidden="true">🔔</span>
-              {notificationCount > 99 ? '99+' : notificationCount}
-            </span>
-          )}
-        </span>
-      </NavLink>
+      <NavLink to="/candidate/applications">{t.nav.myApplications}</NavLink>
       <NavLink to="/candidate/saved-jobs">{t.nav.savedJobs}</NavLink>
       <NavLink to="/candidate/resumes">{t.nav.myResumes}</NavLink>
       <NavLink to="/candidate/ats-checker">{t.nav.atsChecker}</NavLink>
@@ -127,6 +222,7 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center space-x-5">
             {links}
+            {candidateNotificationButton}
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'fr')}
@@ -190,6 +286,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
           <div className="flex flex-col px-4 py-3 space-y-3">
             {links}
+            {candidateNotificationButton}
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'fr')}

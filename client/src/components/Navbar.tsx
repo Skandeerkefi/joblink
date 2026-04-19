@@ -41,7 +41,7 @@ export default function Navbar() {
     }
 
     fetchNotificationCount()
-    const interval = setInterval(fetchNotificationCount, 60000)
+    const interval = setInterval(fetchNotificationCount, 120000)
     return () => clearInterval(interval)
   }, [user])
 
@@ -77,8 +77,13 @@ export default function Navbar() {
         <span className="inline-flex items-center gap-1.5">
           {t.nav.myApplications}
           {notificationCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-500 text-white text-[10px] px-2 py-0.5 leading-none">
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-red-500 text-white text-[10px] px-2 py-0.5 leading-none"
+              aria-label={`${notificationCount} notifications`}
+              title={`${notificationCount} notifications`}
+            >
               <span aria-hidden="true">🔔</span>
+              <span className="sr-only">{notificationCount} notifications</span>
               {notificationCount > 99 ? '99+' : notificationCount}
             </span>
           )}

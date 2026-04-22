@@ -224,7 +224,6 @@ export default function Navbar() {
             {logoVisible && (
               <img src={logoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
             )}
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">JobLink</span>
           </Link>
 
           <div className="hidden lg:flex items-center space-x-4">

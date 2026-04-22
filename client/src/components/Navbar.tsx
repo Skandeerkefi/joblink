@@ -26,12 +26,15 @@ type CandidateNotificationItem = {
 }
 
 export default function Navbar() {
+  const logoUrl = import.meta.env.VITE_PLATFORM_LOGO_URL || '/joblink-logo.svg'
+  const logoAlt = import.meta.env.VITE_PLATFORM_LOGO_ALT || 'Platform logo'
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [logoVisible, setLogoVisible] = useState(true)
   const [notificationCount, setNotificationCount] = useState(0)
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false)
   const [notificationItems, setNotificationItems] = useState<CandidateNotificationItem[]>([])
@@ -218,10 +221,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
+            {logoVisible && (
+              <img src={logoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
+            )}
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">JobLink</span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-5">
+          <div className="hidden lg:flex items-center space-x-4">
             {links}
             {candidateNotificationButton}
             <select
@@ -266,7 +272,7 @@ export default function Navbar() {
           </div>
 
           <button
-            className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none"
+            className="lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -284,7 +290,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <div className="lg:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
           <div className="flex flex-col px-4 py-3 space-y-3">
             {links}
             {candidateNotificationButton}

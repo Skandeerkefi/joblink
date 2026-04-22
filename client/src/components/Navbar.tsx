@@ -27,6 +27,7 @@ type CandidateNotificationItem = {
 
 export default function Navbar() {
   const logoUrl = import.meta.env.VITE_PLATFORM_LOGO_URL || '/joblink-logo.svg'
+  const logoAlt = import.meta.env.VITE_PLATFORM_LOGO_ALT || 'Platform logo'
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
@@ -221,12 +222,12 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
             {logoVisible && (
-              <img src={logoUrl} alt="Platform logo" className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
+              <img src={logoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
             )}
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">JobLink</span>
           </Link>
 
-          <div className="hidden lg:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-4">
             {links}
             {candidateNotificationButton}
             <select

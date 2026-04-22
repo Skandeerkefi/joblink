@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
-import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES, getSubcategoryLabel } from '../constants/categories'
 
 interface Job {
   _id: string
@@ -14,6 +14,7 @@ interface Job {
   experienceLevel: string
   remote: boolean
   category: string
+  subCategory?: string
   skills: string[]
   recruiter: { _id: string; name: string; email: string }
   createdAt: string
@@ -30,6 +31,7 @@ interface Resume {
 interface ResumeAnalysis {
   atsScore: number
   matchScore: number | null
+  tips?: string[]
 }
 
 const categoryColors: Record<string, string> = {
@@ -65,6 +67,7 @@ export default function JobDetail() {
   const [similarJobs, setSimilarJobs] = useState<Job[]>([])
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [applyTips, setApplyTips] = useState<string[]>([])
 
   useEffect(() => {
     fetchJob()
@@ -118,6 +121,7 @@ export default function JobDetail() {
         setAnalysis({
           atsScore: res.data.analysis.atsScore,
           matchScore: res.data.analysis.matchScore,
+          tips: Array.isArray(res.data.analysis.matchBreakdown?.tips) ? res.data.analysis.matchBreakdown.tips : [],
         })
       } catch {
         setAnalysis(null)
@@ -141,6 +145,7 @@ export default function JobDetail() {
   const handleApply = async () => {
     setError('')
     setSuccess('')
+    setApplyTips([])
     setApplying(true)
     try {
       const res = await api.post('/applications', {
@@ -149,6 +154,7 @@ export default function JobDetail() {
         coverLetter: coverLetter || undefined,
       })
       const score = res.data?.score
+      setApplyTips(Array.isArray(score?.tips) ? score.tips : [])
       setSuccess(
         score
           ? `Application submitted! Match score: ${score.match}/100 • ATS score: ${score.ats}/100`
@@ -193,6 +199,7 @@ export default function JobDetail() {
   }
 
   const categoryLabel = CATEGORIES.find((c) => c.value === job.category)?.label || job.category
+  const subCategoryLabel = getSubcategoryLabel(job.category, job.subCategory)
   const jobTypeLabel = JOB_TYPES.find((t) => t.value === job.jobType)?.label || job.jobType
   const experienceLabel = EXPERIENCE_LEVELS.find((level) => level.value === job.experienceLevel)?.label || job.experienceLevel
 
@@ -236,6 +243,11 @@ export default function JobDetail() {
             >
               {categoryLabel}
             </span>
+            {subCategoryLabel && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                {subCategoryLabel}
+              </span>
+            )}
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
               {jobTypeLabel}
             </span>
@@ -277,7 +289,14 @@ export default function JobDetail() {
 
             {success && (
               <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg mb-4">
-                {success}
+                <p>{success}</p>
+                {applyTips.length > 0 && (
+                  <ul className="mt-2 list-disc list-inside text-sm space-y-1">
+                    {applyTips.map((tip, idx) => (
+                      <li key={idx}>{tip}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
             {error && (
@@ -314,6 +333,13 @@ export default function JobDetail() {
                   <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
                     <p><span className="font-semibold">ATS score:</span> {analysis.atsScore}/100</p>
                     <p><span className="font-semibold">Job match score:</span> {analysis.matchScore ?? 0}/100</p>
+                    {analysis.tips && analysis.tips.length > 0 && (
+                      <ul className="mt-2 list-disc list-inside text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
+                        {analysis.tips.slice(0, 3).map((tip, idx) => (
+                          <li key={idx}>{tip}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 dark:text-gray-400">Unable to analyze this resume right now.</p>
@@ -377,6 +403,11 @@ export default function JobDetail() {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryColors[sj.category] || 'bg-gray-100 text-gray-800'}`}>
                         {CATEGORIES.find((c) => c.value === sj.category)?.label || sj.category}
                       </span>
+                      {sj.subCategory && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {getSubcategoryLabel(sj.category, sj.subCategory)}
+                        </span>
+                      )}
                       {sj.skills.slice(0, 3).map((skill) => (
                         <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                           {skill}

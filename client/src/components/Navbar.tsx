@@ -185,6 +185,7 @@ export default function Navbar() {
       <NavLink to="/candidate/applications">{t.nav.myApplications}</NavLink>
       <NavLink to="/candidate/saved-jobs">{t.nav.savedJobs}</NavLink>
       <NavLink to="/candidate/resumes">{t.nav.myResumes}</NavLink>
+      <NavLink to="/candidate/profile">{t.nav.profile}</NavLink>
       <NavLink to="/candidate/ats-checker">{t.nav.atsChecker}</NavLink>
     </>
   )

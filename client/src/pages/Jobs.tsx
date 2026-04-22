@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
-import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../constants/categories'
+import {
+  CATEGORIES,
+  EXPERIENCE_LEVELS,
+  JOB_TYPES,
+  getSubcategoriesByCategory,
+  getSubcategoryLabel,
+} from '../constants/categories'
 import { TUNISIA_GOVERNORATES } from '../constants/tunisiaGovernorates'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -15,6 +21,7 @@ interface Job {
   experienceLevel: string
   remote: boolean
   category: string
+  subCategory?: string
   skills: string[]
   recruiter: { _id: string; name: string }
   createdAt: string
@@ -52,6 +59,7 @@ export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedJobType, setSelectedJobType] = useState('')
+  const [selectedSubCategory, setSelectedSubCategory] = useState('')
   const [locationInput, setLocationInput] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [skillsInput, setSkillsInput] = useState('')
@@ -70,6 +78,7 @@ export default function Jobs() {
       if (selectedCategory) params.category = selectedCategory
       if (searchQuery) params.q = searchQuery
       if (selectedJobType) params.jobType = selectedJobType
+      if (selectedSubCategory) params.subCategory = selectedSubCategory
       if (locationQuery) params.location = locationQuery
       if (skillsQuery) params.skills = skillsQuery
       if (remoteOnly) params.remote = true
@@ -83,7 +92,7 @@ export default function Jobs() {
     } finally {
       setLoading(false)
     }
-  }, [selectedCategory, searchQuery, selectedJobType, locationQuery, skillsQuery, remoteOnly, sort, page])
+  }, [selectedCategory, selectedSubCategory, searchQuery, selectedJobType, locationQuery, skillsQuery, remoteOnly, sort, page])
 
   useEffect(() => {
     fetchJobs()
@@ -110,6 +119,7 @@ export default function Jobs() {
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value)
+    setSelectedSubCategory('')
     setPage(1)
   }
 
@@ -127,6 +137,7 @@ export default function Jobs() {
     setSkillsInput('')
     setSkillsQuery('')
     setSelectedJobType('')
+    setSelectedSubCategory('')
     setRemoteOnly(false)
     setSort('newest')
     setPage(1)
@@ -173,6 +184,7 @@ export default function Jobs() {
     locationQuery,
     skillsQuery,
     selectedJobType,
+    selectedSubCategory,
     remoteOnly,
     sort !== 'newest',
   ].some(Boolean)
@@ -231,6 +243,19 @@ export default function Jobs() {
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
                 {cat.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedSubCategory}
+            onChange={(e) => { setSelectedSubCategory(e.target.value); setPage(1) }}
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="">All Domains</option>
+            {getSubcategoriesByCategory(selectedCategory).map((sc) => (
+              <option key={sc.value} value={sc.value}>
+                {sc.label}
               </option>
             ))}
           </select>
@@ -326,6 +351,11 @@ export default function Jobs() {
                       >
                         {getCategoryLabel(job.category)}
                       </span>
+                      {job.subCategory && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {getSubcategoryLabel(job.category, job.subCategory)}
+                        </span>
+                      )}
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                         {getJobTypeLabel(job.jobType)}
                       </span>

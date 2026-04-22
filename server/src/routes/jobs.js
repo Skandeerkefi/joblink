@@ -6,6 +6,7 @@ const SavedJob = require('../models/SavedJob');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { TUNISIA_GOVERNORATES, toGovernorate } = require('../constants/tunisiaGovernorates');
+const { ALL_SUBCATEGORY_VALUES, isValidSubCategory } = require('../constants/jobCategories');
 
 // GET /api/jobs
 router.get('/', async (req, res, next) => {
@@ -14,6 +15,7 @@ router.get('/', async (req, res, next) => {
 
     // Category filter
     if (req.query.category) filter.category = String(req.query.category);
+    if (req.query.subCategory) filter.subCategory = String(req.query.subCategory);
 
     // Location filter (Tunisia governorates)
     if (req.query.location) {
@@ -164,11 +166,18 @@ router.post(
       .optional()
       .isIn(['DEBUTANT', 'JUNIOR', 'INTERMEDIATE', 'SENIOR'])
       .withMessage('Experience level must be DEBUTANT, JUNIOR, INTERMEDIATE, or SENIOR'),
+    body('subCategory')
+      .optional({ checkFalsy: true })
+      .isIn(ALL_SUBCATEGORY_VALUES)
+      .withMessage('Subcategory is invalid'),
   ],
   validate,
   async (req, res, next) => {
     try {
-      const { title, description, location, jobType, remote, category, skills } = req.body;
+      const { title, description, location, jobType, remote, category, subCategory, skills } = req.body;
+      if (!isValidSubCategory(category, subCategory)) {
+        return res.status(400).json({ success: false, message: 'Subcategory does not match selected category' });
+      }
       const job = await Job.create({
         recruiter: req.user.id,
         title,
@@ -178,6 +187,7 @@ router.post(
         experienceLevel: req.body.experienceLevel || 'JUNIOR',
         remote: Boolean(remote),
         category,
+        subCategory: subCategory || undefined,
         skills: skills || [],
       });
       res.status(201).json({ success: true, job });
@@ -195,7 +205,7 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
     if (job.recruiter.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    const { title, description, location, jobType, experienceLevel, remote, category, skills, isActive } = req.body;
+    const { title, description, location, jobType, experienceLevel, remote, category, subCategory, skills, isActive } = req.body;
     const allowedUpdates = {};
     if (title !== undefined) allowedUpdates.title = String(title);
     if (description !== undefined) allowedUpdates.description = String(description);
@@ -217,13 +227,20 @@ router.patch('/:id', protect, authorize('recruiter'), async (req, res, next) => 
     if (experienceLevel !== undefined) allowedUpdates.experienceLevel = String(experienceLevel);
     if (remote !== undefined) allowedUpdates.remote = Boolean(remote);
     if (category !== undefined) allowedUpdates.category = String(category);
+    if (subCategory !== undefined && subCategory) allowedUpdates.subCategory = String(subCategory);
+    const effectiveCategory = allowedUpdates.category !== undefined ? allowedUpdates.category : job.category;
+    const effectiveSubCategory =
+      subCategory !== undefined ? (subCategory ? String(subCategory) : undefined) : job.subCategory;
+    if (!isValidSubCategory(effectiveCategory, effectiveSubCategory)) {
+      return res.status(400).json({ success: false, message: 'Subcategory does not match selected category' });
+    }
     if (skills !== undefined) allowedUpdates.skills = Array.isArray(skills) ? skills.map(String) : [];
     if (isActive !== undefined) allowedUpdates.isActive = Boolean(isActive);
-    const updated = await Job.findByIdAndUpdate(
-      req.params.id,
-      { $set: allowedUpdates },
-      { new: true, runValidators: true }
-    );
+    const updateDoc = { $set: allowedUpdates };
+    if (subCategory !== undefined && !subCategory) {
+      updateDoc.$unset = { subCategory: '' };
+    }
+    const updated = await Job.findByIdAndUpdate(req.params.id, updateDoc, { new: true, runValidators: true });
     res.json({ success: true, job: updated });
   } catch (err) {
     next(err);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api/axios'
-import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES } from '../../constants/categories'
+import { CATEGORIES, EXPERIENCE_LEVELS, JOB_TYPES, getSubcategoriesByCategory } from '../../constants/categories'
 import { TUNISIA_GOVERNORATES } from '../../constants/tunisiaGovernorates'
 import { useLanguage } from '../../context/LanguageContext'
 
@@ -13,6 +13,7 @@ interface JobFormData {
   experienceLevel: string
   remote: boolean
   category: string
+  subCategory: string
   skills: string
 }
 
@@ -30,6 +31,7 @@ export default function JobForm() {
     experienceLevel: 'JUNIOR',
     remote: false,
     category: 'SOFTWARE_ENGINEERING',
+    subCategory: '',
     skills: '',
   })
   const [loading, setLoading] = useState(false)
@@ -51,6 +53,7 @@ export default function JobForm() {
             experienceLevel: job.experienceLevel || 'JUNIOR',
             remote: Boolean(job.remote),
             category: job.category,
+            subCategory: job.subCategory || '',
             skills: job.skills.join(', '),
           })
         } catch {
@@ -81,6 +84,7 @@ export default function JobForm() {
     try {
       const payload = {
         ...form,
+        subCategory: form.subCategory || undefined,
         skills: form.skills
           .split(',')
           .map((s) => s.trim())
@@ -185,7 +189,7 @@ export default function JobForm() {
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Type *</label>
               <select
@@ -225,13 +229,33 @@ export default function JobForm() {
               <select
                 name="category"
                 value={form.category}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const nextCategory = e.target.value
+                  setForm((prev) => ({ ...prev, category: nextCategory, subCategory: '' }))
+                }}
                 required
                 className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subcategory / Domain</label>
+              <select
+                name="subCategory"
+                value={form.subCategory}
+                onChange={handleChange}
+                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">General</option>
+                {getSubcategoriesByCategory(form.category).map((sc) => (
+                  <option key={sc.value} value={sc.value}>
+                    {sc.label}
                   </option>
                 ))}
               </select>

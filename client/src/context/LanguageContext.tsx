@@ -10,6 +10,7 @@ interface Translation {
     myApplications: string
     savedJobs: string
     myResumes: string
+    profile: string
     atsChecker: string
     myJobs: string
     applications: string
@@ -53,6 +54,7 @@ const translations: Record<Language, Translation> = {
       myApplications: 'My Applications',
       savedJobs: 'Saved Jobs',
       myResumes: 'My Resumes',
+      profile: 'Profile',
       atsChecker: 'ATS Checker',
       myJobs: 'My Jobs',
       applications: 'Applications',
@@ -94,6 +96,7 @@ const translations: Record<Language, Translation> = {
       myApplications: 'Mes candidatures',
       savedJobs: 'Offres sauvegardées',
       myResumes: 'Mes CV',
+      profile: 'Profil',
       atsChecker: 'Analyse ATS',
       myJobs: 'Mes offres',
       applications: 'Candidatures',

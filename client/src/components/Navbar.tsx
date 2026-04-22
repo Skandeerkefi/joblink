@@ -26,8 +26,10 @@ type CandidateNotificationItem = {
 }
 
 export default function Navbar() {
-  const logoUrl = import.meta.env.VITE_PLATFORM_LOGO_URL || '/joblink-logo.svg'
-  const logoAlt = import.meta.env.VITE_PLATFORM_LOGO_ALT || 'Platform logo'
+  const logoUrl =
+    import.meta.env.VITE_PLATFORM_LOGO_URL ||
+    'https://i.ibb.co/8gR3cL2v/Screenshot-2026-04-22-224803-removebg-preview.png'
+  const logoAlt = import.meta.env.VITE_PLATFORM_LOGO_ALT || 'JobLink logo'
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()

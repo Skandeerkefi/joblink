@@ -26,15 +26,14 @@ type CandidateNotificationItem = {
 }
 
 export default function Navbar() {
-  const logoUrl =
-    import.meta.env.VITE_PLATFORM_LOGO_URL ||
-    'https://i.ibb.co/8gR3cL2v/Screenshot-2026-04-22-224803-removebg-preview.png'
+  const logoUrl = import.meta.env.VITE_PLATFORM_LOGO_URL || '/joblink-logo.svg'
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [logoVisible, setLogoVisible] = useState(true)
   const [notificationCount, setNotificationCount] = useState(0)
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false)
   const [notificationItems, setNotificationItems] = useState<CandidateNotificationItem[]>([])
@@ -221,14 +220,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
-            <img
-              src={logoUrl}
-              alt="JobLink logo"
-              className="h-9 w-auto object-contain"
-              onError={(e) => {
-                ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-              }}
-            />
+            {logoVisible && (
+              <img src={logoUrl} alt="JobLink logo" className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
+            )}
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">JobLink</span>
           </Link>
 

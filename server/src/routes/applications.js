@@ -52,7 +52,15 @@ router.post('/', protect, authorize('candidate'), async (req, res, next) => {
       matchScore: match.score,
       matchBreakdown: match.breakdown,
     });
-    res.status(201).json({ success: true, application, score: { ats: ats.score, match: match.score } });
+    res.status(201).json({
+      success: true,
+      application,
+      score: {
+        ats: ats.score,
+        match: match.score,
+        tips: Array.isArray(match.breakdown?.tips) ? match.breakdown.tips : [],
+      },
+    });
   } catch (err) {
     next(err);
   }

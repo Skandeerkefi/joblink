@@ -37,14 +37,15 @@ export default function CandidateDashboard() {
     { to: '/jobs', label: '🔍 Browse Jobs', desc: 'Explore open positions' },
     { to: '/candidate/applications', label: '📋 My Applications', desc: 'Track your applications' },
     { to: '/candidate/resumes', label: '📄 My Resumes', desc: 'Manage your CV files' },
-    { to: '/candidate/ats-checker', label: '🧪 ATS Checker', desc: 'See detailed ATS and match analysis' },
+    { to: '/candidate/profile', label: '👤 Profile & Account', desc: 'Edit profile, email, and password' },
+    { to: '/candidate/ats-checker', label: '🧪 ATS Checker', desc: 'See ATS/match with job filters' },
   ]
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome back, {user?.name}!</h1>
-        <p className="text-gray-500">Here's an overview of your job search activity.</p>
+        <p className="text-gray-600">Here&apos;s an overview of your job search activity.</p>
       </div>
 
       {/* Stats */}
@@ -62,7 +63,7 @@ export default function CandidateDashboard() {
 
       {/* Quick links */}
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {quickLinks.map((link) => (
           <Link
             key={link.to}

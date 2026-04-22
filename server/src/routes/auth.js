@@ -78,4 +78,60 @@ router.get('/me', protect, async (req, res, next) => {
   }
 });
 
+// PUT /api/auth/account
+router.put(
+  '/account',
+  protect,
+  [
+    body('name').optional().isString().trim().notEmpty().withMessage('Name is required'),
+    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('currentPassword')
+      .optional({ checkFalsy: true })
+      .isLength({ min: 6 })
+      .withMessage('Current password must be at least 6 characters'),
+    body('newPassword')
+      .optional({ checkFalsy: true })
+      .isLength({ min: 6 })
+      .withMessage('New password must be at least 6 characters'),
+  ],
+  validate,
+  async (req, res, next) => {
+    try {
+      const { name, email, currentPassword, newPassword } = req.body;
+      const user = await User.findById(req.user.id).select('+password');
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+      if (email && String(email).toLowerCase() !== user.email) {
+        const existing = await User.findOne({ email: String(email).toLowerCase() });
+        if (existing && existing._id.toString() !== user._id.toString()) {
+          return res.status(400).json({ success: false, message: 'Email already in use' });
+        }
+        user.email = String(email).toLowerCase();
+      }
+
+      if (name !== undefined) user.name = String(name).trim();
+
+      if (newPassword) {
+        if (!currentPassword) {
+          return res.status(400).json({ success: false, message: 'Current password is required to change password' });
+        }
+        const validPassword = await user.matchPassword(String(currentPassword));
+        if (!validPassword) {
+          return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+        }
+        user.password = String(newPassword);
+      }
+
+      await user.save();
+      return res.json({
+        success: true,
+        message: 'Account updated successfully',
+        user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 module.exports = router;

@@ -26,6 +26,7 @@ type CandidateNotificationItem = {
 }
 
 export default function Navbar() {
+  const fallbackLogoUrl = '/joblink-logo.svg'
   const logoUrl =
     import.meta.env.VITE_PLATFORM_LOGO_URL ||
     'https://i.ibb.co/8gR3cL2v/Screenshot-2026-04-22-224803-removebg-preview.png'
@@ -37,6 +38,7 @@ export default function Navbar() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoVisible, setLogoVisible] = useState(true)
+  const [currentLogoUrl, setCurrentLogoUrl] = useState(logoUrl)
   const [notificationCount, setNotificationCount] = useState(0)
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false)
   const [notificationItems, setNotificationItems] = useState<CandidateNotificationItem[]>([])
@@ -106,6 +108,14 @@ export default function Navbar() {
     logout()
     navigate('/login')
     setMenuOpen(false)
+  }
+
+  const handleLogoError = () => {
+    if (currentLogoUrl !== fallbackLogoUrl) {
+      setCurrentLogoUrl(fallbackLogoUrl)
+      return
+    }
+    setLogoVisible(false)
   }
 
   const isActive = (path: string) =>
@@ -224,7 +234,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
             {logoVisible && (
-              <img src={logoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
+              <img src={currentLogoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={handleLogoError} />
             )}
           </Link>
 

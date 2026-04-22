@@ -221,12 +221,12 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
             {logoVisible && (
-              <img src={logoUrl} alt="JobLink logo" className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
+              <img src={logoUrl} alt="Platform logo" className="h-9 w-auto object-contain" onError={() => setLogoVisible(false)} />
             )}
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">JobLink</span>
           </Link>
 
-          <div className="hidden xl:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3">
             {links}
             {candidateNotificationButton}
             <select
@@ -271,7 +271,7 @@ export default function Navbar() {
           </div>
 
           <button
-            className="xl:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none"
+            className="lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -289,7 +289,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="xl:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <div className="lg:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
           <div className="flex flex-col px-4 py-3 space-y-3">
             {links}
             {candidateNotificationButton}

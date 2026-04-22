@@ -124,10 +124,10 @@ export default function CandidateProfile() {
       setProfile({
         bio: p.bio || '',
         skills: p.skills || [],
-        education: (p.education || []).map((ed: Education) => ({
-          ...ed,
-          startYear: ed.startYear != null ? String(ed.startYear) : '',
-          endYear: ed.endYear != null ? String(ed.endYear) : '',
+        education: (p.education || []).map((educationEntry: Education) => ({
+          ...educationEntry,
+          startYear: educationEntry.startYear != null ? String(educationEntry.startYear) : '',
+          endYear: educationEntry.endYear != null ? String(educationEntry.endYear) : '',
         })),
       })
       setSuccess('Profile saved!')

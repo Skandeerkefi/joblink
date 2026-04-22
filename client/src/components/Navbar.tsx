@@ -234,7 +234,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2 shrink-0" onClick={() => setMenuOpen(false)}>
             {logoVisible && (
-              <img src={currentLogoUrl} alt={logoAlt} className="h-9 w-auto object-contain" onError={handleLogoError} />
+              <img src={currentLogoUrl} alt={logoAlt} className="h-12 w-auto object-contain" onError={handleLogoError} />
             )}
           </Link>
 

@@ -6,12 +6,13 @@ import ResumePdf from '../../components/ResumePdf'
 import type { ManualData, Education, Experience, Project, Certification } from '../../types/resume'
 import { emptyManualData } from '../../types/resume'
 
-type Section = 'personal' | 'summary' | 'skills' | 'certifications' | 'education' | 'experience' | 'projects'
+type Section = 'personal' | 'summary' | 'skills' | 'languages' | 'certifications' | 'education' | 'experience' | 'projects'
 
 const SECTIONS: { key: Section; label: string }[] = [
   { key: 'personal', label: 'Personal Info' },
   { key: 'summary', label: 'Summary' },
   { key: 'skills', label: 'Skills' },
+  { key: 'languages', label: 'Languages' },
   { key: 'certifications', label: 'Certifications' },
   { key: 'education', label: 'Education' },
   { key: 'experience', label: 'Experience' },
@@ -98,6 +99,7 @@ export default function ManualResumeEditor() {
           : base.personalInfo.links,
       },
       skills: Array.isArray(incoming.skills) ? incoming.skills : base.skills,
+      languages: Array.isArray(incoming.languages) ? incoming.languages : base.languages,
       certifications: Array.isArray(incoming.certifications)
         ? incoming.certifications
         : base.certifications,
@@ -157,6 +159,17 @@ export default function ManualResumeEditor() {
   }
   const removeSkill = (i: number) =>
     setData((d) => ({ ...d, skills: d.skills.filter((_, idx) => idx !== i) }))
+
+  // Languages
+  const [languageInput, setLanguageInput] = useState('')
+  const addLanguage = () => {
+    const trimmed = languageInput.trim()
+    if (!trimmed) return
+    setData((d) => ({ ...d, languages: [...d.languages, trimmed] }))
+    setLanguageInput('')
+  }
+  const removeLanguage = (i: number) =>
+    setData((d) => ({ ...d, languages: d.languages.filter((_, idx) => idx !== i) }))
 
   // Certifications
   const addCertification = () =>
@@ -390,6 +403,31 @@ export default function ManualResumeEditor() {
                   <span key={i} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
                     {skill}
                     <button onClick={() => removeSkill(i)} className="text-blue-400 hover:text-blue-700">✕</button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'languages' && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Languages</h2>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={languageInput}
+                  onChange={(e) => setLanguageInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
+                  placeholder="Type a language and press Enter"
+                  className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button onClick={addLanguage} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Add</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {data.languages.map((language, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm">
+                    {language}
+                    <button onClick={() => removeLanguage(i)} className="text-indigo-400 hover:text-indigo-700">✕</button>
                   </span>
                 ))}
               </div>

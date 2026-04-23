@@ -52,7 +52,7 @@ export default function CandidateProfile() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       <div className="rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30 p-6 mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Account Settings</h1>
       </div>

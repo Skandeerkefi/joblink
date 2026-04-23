@@ -44,6 +44,7 @@ export interface ManualData {
   personalInfo: PersonalInfo
   summary: string
   skills: string[]
+  languages: string[]
   certifications: Certification[]
   education: Education[]
   experience: Experience[]
@@ -67,6 +68,7 @@ export const emptyManualData = (): ManualData => ({
   personalInfo: { fullName: '', email: '', phone: '', location: '', links: [] },
   summary: '',
   skills: [],
+  languages: [],
   certifications: [],
   education: [],
   experience: [],

@@ -123,7 +123,7 @@ interface Props {
 }
 
 export default function ResumePdf({ data }: Props) {
-  const { personalInfo, summary, skills, certifications, education, experience, projects } = data
+  const { personalInfo, summary, skills, languages, certifications, education, experience, projects } = data
 
   // Build an array of contact items to render separators correctly
   const contactItems: { text: string; href?: string }[] = []
@@ -168,6 +168,18 @@ export default function ResumePdf({ data }: Props) {
             <View style={styles.skillsWrap}>
               {skills.filter(Boolean).map((skill, i) => (
                 <Text key={i} style={styles.skillBadge}>{skill}</Text>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Languages */}
+        {languages && languages.filter(Boolean).length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Languages</Text>
+            <View style={styles.skillsWrap}>
+              {languages.filter(Boolean).map((language, i) => (
+                <Text key={i} style={styles.skillBadge}>{language}</Text>
               ))}
             </View>
           </View>

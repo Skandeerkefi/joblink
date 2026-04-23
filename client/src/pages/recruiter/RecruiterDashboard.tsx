@@ -30,6 +30,7 @@ const STATUS_LABELS: Record<DashboardApplication['status'], string> = {
   HIRED: 'Hired',
   REJECTED: 'Rejected',
 }
+const TOP_JOBS_LIMIT = 5
 
 export default function RecruiterDashboard() {
   const { user } = useAuth()
@@ -75,7 +76,7 @@ export default function RecruiterDashboard() {
     let interviewsScheduled = 0
     let recentApplications = 0
     const last7Days = Date.now() - 7 * 24 * 60 * 60 * 1000
-    const byJob = new Map<string, { title: string; count: number }>()
+    const byJob = new Map<string, { id: string; title: string; count: number }>()
 
     applications.forEach((app) => {
       statusCounts[app.status] += 1
@@ -91,6 +92,7 @@ export default function RecruiterDashboard() {
       if (new Date(app.createdAt).getTime() >= last7Days) recentApplications += 1
       if (app.job?._id) {
         const current = byJob.get(app.job._id) || {
+          id: app.job._id,
           title: app.job.title || 'Untitled job',
           count: 0,
         }
@@ -99,7 +101,7 @@ export default function RecruiterDashboard() {
       }
     })
 
-    const topJobs = [...byJob.values()].sort((a, b) => b.count - a.count).slice(0, 5)
+    const topJobs = [...byJob.values()].sort((a, b) => b.count - a.count).slice(0, TOP_JOBS_LIMIT)
     return {
       statusCounts,
       avgAts: atsCount ? Math.round(atsSum / atsCount) : null,
@@ -177,7 +179,7 @@ export default function RecruiterDashboard() {
           ) : (
             <div className="space-y-3">
               {analytics.topJobs.map((job) => (
-                <div key={job.title} className="flex items-center justify-between gap-3">
+                <div key={job.id} className="flex items-center justify-between gap-3">
                   <div className="text-sm text-gray-700 truncate">{job.title}</div>
                   <div className="text-sm font-semibold text-gray-900">{job.count}</div>
                 </div>

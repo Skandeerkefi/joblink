@@ -12,8 +12,10 @@ interface Application {
     category: string
   }
   resume?: {
-    originalName: string
-    fileUrl: string
+    type?: 'UPLOAD' | 'MANUAL'
+    title?: string
+    originalName?: string
+    fileUrl?: string
   }
   status: string
   coverLetter?: string
@@ -61,6 +63,11 @@ export default function MyApplications() {
   const getLatestNotification = (app: Application) => {
     if (!app.notifications || app.notifications.length === 0) return null
     return app.notifications[app.notifications.length - 1]
+  }
+
+  const getResumeLabel = (app: Application) => {
+    if (!app.resume) return '—'
+    return app.resume.originalName || app.resume.title || (app.resume.type === 'MANUAL' ? 'Manual CV' : 'Resume')
   }
 
   if (loading) {
@@ -119,15 +126,17 @@ export default function MyApplications() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{app.job?.location || '—'}</td>
                     <td className="px-6 py-4 text-sm">
-                      {app.resume ? (
+                      {app.resume?.fileUrl ? (
                         <a
                           href={`${API_BASE_URL}${app.resume.fileUrl}`}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {app.resume.originalName}
+                          {getResumeLabel(app)}
                         </a>
+                      ) : app.resume ? (
+                        <span className="text-gray-700">{getResumeLabel(app)}</span>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}

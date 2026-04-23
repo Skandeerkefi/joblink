@@ -46,6 +46,7 @@ const manualDataSchema = new mongoose.Schema({
   personalInfo: { type: personalInfoSchema, default: () => ({}) },
   summary: { type: String },
   skills: [{ type: String }],
+  languages: [{ type: String }],
   certifications: [certificationSchema],
   education: [educationSchema],
   experience: [experienceSchema],

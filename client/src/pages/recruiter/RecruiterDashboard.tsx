@@ -66,7 +66,7 @@ export default function RecruiterDashboard() {
   const analytics = useMemo(() => {
     const statusCounts = STATUS_ORDER.reduce<Record<DashboardApplication['status'], number>>(
       (acc, status) => ({ ...acc, [status]: 0 }),
-      { APPLIED: 0, VIEWED: 0, INTERVIEW: 0, HIRED: 0, REJECTED: 0 }
+      {} as Record<DashboardApplication['status'], number>
     )
 
     let atsSum = 0
@@ -156,7 +156,7 @@ export default function RecruiterDashboard() {
           <div className="space-y-3">
             {STATUS_ORDER.map((status) => {
               const count = analytics.statusCounts[status]
-              const pct = stats.applications > 0 ? Math.round((count / stats.applications) * 100) : 0
+              const pct = applications.length > 0 ? Math.round((count / applications.length) * 100) : 0
               return (
                 <div key={status}>
                   <div className="flex items-center justify-between text-sm mb-1">

@@ -96,7 +96,7 @@ export default function RecruiterDashboard() {
       if (app.job?._id) {
         const current = byJob.get(app.job._id) || {
           id: app.job._id,
-          title: app.job.title || 'Untitled job',
+          title: app.job.title || 'Untitled Job',
           count: 0,
         }
         current.count += 1

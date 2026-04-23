@@ -67,7 +67,8 @@ export default function MyApplications() {
 
   const getResumeLabel = (app: Application) => {
     if (!app.resume) return '—'
-    return app.resume.originalName || app.resume.title || (app.resume.type === 'MANUAL' ? 'Manual CV' : 'Resume')
+    if (app.resume.type === 'MANUAL') return app.resume.title || 'Manual CV'
+    return app.resume.originalName || 'Resume'
   }
 
   if (loading) {

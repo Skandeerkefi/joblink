@@ -61,11 +61,14 @@ export default function CandidateDashboard() {
     { to: '/candidate/ats-checker', label: '🧪 ATS Checker', desc: 'See ATS/match with job filters' },
   ]
 
-  const safeApplications = stats.applications || 1
-  const interviewRate = Math.round((stats.interviews / safeApplications) * 100)
-  const acceptedRate = Math.round((stats.accepted / safeApplications) * 100)
-  const viewedRate = Math.round((stats.viewed / safeApplications) * 100)
-  const rejectedRate = Math.round((stats.rejected / safeApplications) * 100)
+  const getRate = (value: number) => {
+    if (stats.applications === 0) return 0
+    return Math.round((value / stats.applications) * 100)
+  }
+  const interviewRate = getRate(stats.interviews)
+  const acceptedRate = getRate(stats.accepted)
+  const viewedRate = getRate(stats.viewed)
+  const rejectedRate = getRate(stats.rejected)
 
   return (
     <div>

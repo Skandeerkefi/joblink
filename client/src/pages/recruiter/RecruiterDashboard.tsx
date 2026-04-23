@@ -64,10 +64,13 @@ export default function RecruiterDashboard() {
   }, [user])
 
   const analytics = useMemo(() => {
-    const statusCounts = STATUS_ORDER.reduce<Record<DashboardApplication['status'], number>>(
-      (acc, status) => ({ ...acc, [status]: 0 }),
-      {} as Record<DashboardApplication['status'], number>
-    )
+    const statusCounts: Record<DashboardApplication['status'], number> = {
+      APPLIED: 0,
+      VIEWED: 0,
+      INTERVIEW: 0,
+      HIRED: 0,
+      REJECTED: 0,
+    }
 
     let atsSum = 0
     let atsCount = 0
@@ -130,8 +133,8 @@ export default function RecruiterDashboard() {
         {[
           { label: 'My Job Postings', value: loading ? '—' : stats.jobs, color: 'text-indigo-600' },
           { label: 'Applications Received', value: loading ? '—' : stats.applications, color: 'text-blue-600' },
-          { label: 'Avg ATS Score', value: loading ? '—' : (analytics.avgAts ?? '—'), color: 'text-cyan-600' },
-          { label: 'Avg Match Score', value: loading ? '—' : (analytics.avgMatch ?? '—'), color: 'text-violet-600' },
+          { label: 'Avg ATS Score', value: loading ? '—' : `${analytics.avgAts ?? '—'}`, color: 'text-cyan-600' },
+          { label: 'Avg Match Score', value: loading ? '—' : `${analytics.avgMatch ?? '—'}`, color: 'text-violet-600' },
           {
             label: 'Interviews Scheduled',
             value: loading ? '—' : analytics.interviewsScheduled,

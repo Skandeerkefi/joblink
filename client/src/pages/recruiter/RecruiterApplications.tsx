@@ -409,8 +409,6 @@ export default function RecruiterApplications() {
                       const requiredSkills = app.matchBreakdown?.requiredSkills
                       const hasSkillMatchCounts =
                         typeof matchedSkills === 'number' && typeof requiredSkills === 'number'
-                      const manualSkillsCount = app.resume?.manualData?.skills?.length || 0
-                      const manualExperienceCount = app.resume?.manualData?.experience?.length || 0
                       return (
                         <tr key={app._id}>
                           <td className="px-4 py-3 align-top">
@@ -462,9 +460,6 @@ export default function RecruiterApplications() {
                             ) : app.resume?.type === 'MANUAL' ? (
                               <div className="text-xs text-gray-700 dark:text-gray-300">
                                 <div className="font-medium">{app.resume.title || 'Manual CV'}</div>
-                                <div className="text-gray-500">
-                                  Skills: {manualSkillsCount} • Experience: {manualExperienceCount}
-                                </div>
                                 <button
                                   type="button"
                                   onClick={() => setSelectedManualApplication(app)}
@@ -528,7 +523,7 @@ export default function RecruiterApplications() {
                           </a>
                         ) : app.resume?.type === 'MANUAL' ? (
                           <div className="text-xs text-gray-500">
-                            {app.resume.title || 'Manual CV'} • Skills: {app.resume.manualData?.skills?.length || 0}
+                            {app.resume.title || 'Manual CV'}
                             <div>
                               <button
                                 type="button"
